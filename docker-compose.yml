@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server 
+    container_name: server 
+    ports : 
+      - "5500:5500"
+    networks:
+      - app-network
+
+  client :
+    build: ./client 
+    container_name: client 
+    ports : 
+      - "3000:3000"
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
