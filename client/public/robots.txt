@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# Reference to your sitemap(s). Use absolute URL.
-Sitemap: https://airdelivery.site/sitemap.xml
