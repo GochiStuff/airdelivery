@@ -1,56 +1,100 @@
 # AirDelivery.site
 
-AirDelivery is a modern, fast, and reliable delivery platform designed to streamline local and regional logistics. It provides a seamless interface for users to request deliveries, track packages in real-time, and manage orders efficiently.  
+**A modern, fast, and reliable delivery platform for local and regional logistics.**
 
-**Website:** [https://airdelivery.site](https://airdelivery.site)  
+**Live site:** https://airdelivery.site
 
-## Features
-- Easy-to-use interface for requesting deliveries  
-- Private p2p transfer using webrtc
-- Near by detection
-- Super fast 
-- No transfer limits ( direct storage write for files above 1.2 GBs )
-- Real-time tracking of packages  
-- Secure and reliable order management  
-- Multi-platform support (Web, Mobile)  
+**Follow:** https://x.com/GochiStuff (@GochiStuff)
+
+---
+
+## Project Overview
+
+AirDelivery is an open-source delivery system that aims to simplify local and regional logistics. The project provides a parent repository that links the frontend and backend applications, and it includes development and Docker workflows to get contributors up and running quickly.
+
+AirDelivery focuses on low-latency transfers, secure peer-to-peer file transfers, and real-time order tracking for a cross-platform experience (web and mobile).
+
+---
+
+## Highlights
+
+- Seamless, user-friendly interface for placing and managing delivery requests
+- Private peer-to-peer transfers using WebRTC
+- Nearby detection for optimized routing and pickup
+- Real-time package tracking and status updates
+- Support for large file transfers (direct storage writes for files > 1.2 GB)
+- Multi-platform support (Web -> works on all .)
+
+---
 
 ## Tech Stack
-- NextJs 
-- NodeJs
-- Express 
-- MongoDB
-- Websocket
-- WebRTC
 
-## Getting Started
-This repo links the **frontend** and **backend** repositories and provides an easy dev + docker flow. 
+- **Frontend:** Next.js
+- **Backend:** Node.js, Express
+- **Database:** MongoDB
+- **Realtime:** WebSocket
+- **Peer-to-peer:** WebRTC
+- **Containerization / Orchestration:** Docker, Docker Compose
 
-To get started with AirDelivery, follow the setup instructions: 
+---
 
-## Quick choices
+## Repository Structure (Parent Repo)
 
-1. **Submodules (recommended for discoverability)**
-- Pros: single `git clone --recurse-submodules` to fetch everything; each repo keeps its history and issues.
-- Cons: contributors must understand submodules (easy with docs).
+This repository functions as the parent/umbrella repo and links the service repositories:
 
-2. **Bootstrap script**
-- Pros: very simple for new contributors (`./scripts/bootstrap.sh`).
-- Cons: separate commit histories remain independent; less explicit in git metadata.
+- `ad-backend` — Backend service (realtime gateway)
+- `airdelivery-frontend` — Frontend application (Next.js)
 
 
-## Quickstart (submodules)
+- Backend: `https://github.com/GochiStuff/ad-backend`
+- Frontend: `https://github.com/GochiStuff/airdelivery-frontend`
+
+---
 
 
-```bash
-# 1) clone meta repo with submodules
-git clone --recurse-submodules git@github.com:YOUR_ORG/YOUR_META_REPO.git
-cd YOUR_META_REPO
+## Architecture & Design Notes
 
+- **Peer-to-peer transfers:** WebRTC is used to establish private, encrypted P2P channels for direct file transfer between clients when possible, falling back to server proxied transfer when required.
+- **Realtime updates:** WebSocket is used for order status updates and live tracking.
+- **Nearby detection:** ip pasing and grouping is implemented on the backend to match nearby drivers or couriers to requests.
 
-# 2) build & run using docker-compose
-cp .env.example .env # set ports / env variables
-docker-compose up --build
+---
 
-```bash
-git clone <frontend-repo-link>
-git clone <backend-repo-link>
+## Contributing
+
+Contributions are welcome. 
+
+Please include meaningful commit messages and follow the repository's code style. If you plan to work on a large feature, open an issue first so we can coordinate.
+
+---
+
+## License
+
+This project is released under the License. See `LICENSE` for details.
+
+---
+
+## Roadmap
+
+Planned improvements and next milestones:
+
+- Mobile native clients (iOS, Android)
+- Driver/courier partner portal
+- Multi-tenant support for enterprise customers
+- Improved monitoring and observability
+
+---
+
+## Security & Responsible Disclosure
+
+If you discover a security vulnerability, please report it privately by opening an issue labeled `security` or by contacting the repository owner directly. Do not post security issues in public issue threads.
+
+---
+
+## Contact
+
+- Live site: https://airdelivery.site
+- GitHub: https://github.com/GochiStuff
+- Follow / Contact on X: https://x.com/GochiStuff (@GochiStuff)
+
+---
