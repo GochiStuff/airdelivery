@@ -47,7 +47,7 @@ This repository functions as the parent/umbrella repo and links the service repo
 
 
 - Backend: https://github.com/GochiStuff/ad-backend
-- Frontend: https://github.com/GochiStuff/airdelivery-frontend
+- Frontend: https://github.com/GochiStuff/airdelievery-frontend
 
 ---
 
