@@ -46,8 +46,8 @@ This repository functions as the parent/umbrella repo and links the service repo
 - `airdelivery-frontend` — Frontend application (Next.js)
 
 
-- Backend: `https://github.com/GochiStuff/ad-backend`
-- Frontend: `https://github.com/GochiStuff/airdelivery-frontend`
+- Backend: https://github.com/GochiStuff/ad-backend
+- Frontend: https://github.com/GochiStuff/airdelivery-frontend
 
 ---
 
