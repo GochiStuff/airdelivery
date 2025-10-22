@@ -74,7 +74,7 @@ Please follow the code style and open an issue before starting large features.
 
 ## License
 
-This project is licensed under the **MIT License**. See `LICENSE` for details.  
+This project is licensed under the **GPLv3 License**. See `LICENSE` for details.  
 
 ---
 
