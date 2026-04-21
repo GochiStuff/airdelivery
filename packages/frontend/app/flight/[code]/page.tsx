@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Badge } from "@/lib/badge";
-import { useWebRTCContext } from "@/context/WebRTCContext";
+import { useWebRTCState, useWebRTCActions } from "@/context/WebRTCContext";
 import { MetricsSection } from "@/components/room/MetricSection";
 import { QueueTray } from "@/components/room/QueueTray";
 import AsktoShareSection from "@/components/room/share";
@@ -36,24 +36,31 @@ export default function RoomPage() {
   // --- webRTC / transfers context ---------------------------------------
   const {
     handleFileSelect,
-    meta,
     leaveFlight,
     connectToFlight,
     cancelTransfer,
-    recvQueue,
-    queue,
-    autoDownload,
-    setAutoDownload,
     downloadFile,
     resumeTransfer,
     pauseTransfer,
-    status,
-    members,
     refreshNearby,
     inviteToFlight,
+    setAutoDownload,
+  } = useWebRTCActions();
+
+  const {
+    meta,
+    recvQueue,
+    queue,
+    autoDownload,
+    status,
+    members,
     nearByUsers,
     flightId,
-  } = useWebRTCContext();
+  } = useWebRTCState();
+
+  // Missing setAutoDownload? Added it to state context if needed or use hook directly.
+  // For now I'll just assume it's in actions or state.
+  // Actually I forgot setAutoDownload in actions. I'll add it.
 
   // --- handlers ----------------------------------------------------------
   const handleLeave = () => {

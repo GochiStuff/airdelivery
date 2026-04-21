@@ -1,23 +1,160 @@
 import { Download, File, Pause, Play, X, ArrowDown, ArrowUp } from "lucide-react";
-import { useState } from "react";
+import React, { useState, memo } from "react";
 import { Switch } from "../ui/switch";
-import Image from "next/image";
 
 interface QueueTrayProp {
   title: string;
   items: any[];
   pauseTransfer?: (id: string) => void;
-  fileDownload?: (file: {
-    transferId: string;
-    blobUrl: string;
-    directoryPath: string;
-  }) => void;
+  fileDownload?: (file: any) => void;
   openfile?: (url: string) => void;
   autoDownload?: boolean;
   setAutoDownload?: (b: boolean) => void;
   resumeTransfer?: (id: string) => void;
   cancelTransfer?: (id: string) => void;
 }
+
+const statusLabels: Record<string, string> = {
+  queued: "Queued",
+  sending: "Sending",
+  paused: "Paused",
+  done: "Done",
+  error: "Error",
+  canceled: "Canceled",
+  receiving: "Receiving",
+};
+
+const TransferCard = memo(({ 
+  item, 
+  autoDownload, 
+  pauseTransfer, 
+  resumeTransfer, 
+  cancelTransfer, 
+  fileDownload 
+}: { 
+  item: any; 
+  autoDownload?: boolean;
+  pauseTransfer?: (id: string) => void;
+  resumeTransfer?: (id: string) => void;
+  cancelTransfer?: (id: string) => void;
+  fileDownload?: (file: any) => void;
+}) => {
+  const isReceive = item.type === "receive";
+  const icon = isReceive ? (
+    <ArrowDown className="w-4 h-4 text-green-500" />
+  ) : (
+    <ArrowUp className="w-4 h-4 text-blue-500" />
+  );
+
+  return (
+    <div className="relative w-48 flex-shrink-0 rounded-2xl outline-1 outline-zinc-300 bg-white shadow-md hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden">
+      <div className="absolute top-2 left-2 bg-white/80 p-1 rounded-full shadow-md">
+        {icon}
+      </div>
+
+      {item.thumbnail ? (
+        <div className="w-full h-32 bg-zinc-100">
+          <img
+            src={item.thumbnail}
+            alt="Thumbnail"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="w-full h-32 bg-zinc-100 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center shadow-inner">
+            <File className="w-6 h-6 text-zinc-500" />
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col items-center text-center px-3 py-2 gap-1">
+        <span className="text-sm font-medium text-zinc-800 truncate w-full">
+          {item.file?.name || item.name || item.directoryPath}
+        </span>
+        <div className="w-full h-1.5 rounded-full bg-zinc-200 overflow-hidden shadow-inner">
+          <div
+            className="h-full bg-orange-500 transition-all duration-300"
+            style={{ width: `${item.progress || 0}%` }}
+          />
+        </div>
+        <div className="w-full flex justify-between text-[11px] text-zinc-500 mt-1 font-medium">
+          <span>{item.progress}%</span>
+          <span>{statusLabels[item.status] || item.status}</span>
+        </div>
+      </div>
+
+      <div className="w-full flex justify-center items-center gap-2 py-2 mb-1">
+        {isReceive ? (
+          <>
+            {item.status !== "done" && item.status !== "canceled" && (
+              <button
+                className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
+                onClick={() => cancelTransfer?.(item.transferId)}
+                title="Cancel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            {item.status === "done" && item.downloaded ? (
+              <p className="text-[11px] text-zinc-500 font-semibold">Downloaded</p>
+            ) : (
+              item.status === "done" &&
+              !autoDownload &&
+              item.blobUrl && (
+                <button
+                  className="rounded-full p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-500 border border-blue-200 transition"
+                  onClick={() => fileDownload?.(item)}
+                  title="Download"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              )
+            )}
+          </>
+        ) : (
+          <>
+            {item.status === "paused" && (
+              <button
+                className="rounded-full p-1.5 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 transition"
+                onClick={() => resumeTransfer?.(item.transferId)}
+                title="Resume"
+              >
+                <Play className="w-4 h-4" />
+              </button>
+            )}
+            {item.status === "sending" && (
+              <button
+                className="rounded-full p-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border border-yellow-200 transition"
+                onClick={() => pauseTransfer?.(item.transferId)}
+                title="Pause"
+              >
+                <Pause className="w-4 h-4" />
+              </button>
+            )}
+            {item.status !== "done" && item.status !== "canceled" && (
+              <button
+                className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
+                onClick={() => cancelTransfer?.(item.transferId)}
+                title="Cancel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  // Only re-render if progress or status changes
+  return prev.item.progress === next.item.progress && 
+         prev.item.status === next.item.status &&
+         prev.item.downloaded === next.item.downloaded &&
+         prev.autoDownload === next.autoDownload;
+});
+
+TransferCard.displayName = "TransferCard";
 
 export function QueueTray({
   title,
@@ -29,19 +166,10 @@ export function QueueTray({
   resumeTransfer,
   cancelTransfer,
 }: QueueTrayProp) {
-  const statusLabels: Record<string, string> = {
-    queued: "Queued",
-    sending: "Sending",
-    paused: "Paused",
-    done: "Done",
-    error: "Error",
-    canceled: "Canceled",
-  };
-
   const [show, setShow] = useState(false);
 
   return (
-    <div className="bg-white  relative rounded-2xl shadow-sm p-4">
+    <div className="bg-white relative rounded-2xl shadow-sm p-4">
       <h3 className="text-lg font-semibold mb-4">{title}</h3>
  
       <div className="absolute top-3 right-4 flex gap-2">
@@ -94,127 +222,17 @@ export function QueueTray({
             <span className="text-sm">No transfers yet</span>
           </div>
         ) : (
-          items.map((item) => {
-            const isReceive = item.type === "receive";
-            const icon = isReceive ? (
-              <ArrowDown className="w-4 h-4 text-green-500" />
-            ) : (
-              <ArrowUp className="w-4 h-4 text-blue-500" />
-            );
-
-            return (
-              <div
-                key={item.transferId}
-                className="relative w-48 flex-shrink-0 rounded-2xl outline-1 outline-zinc-300 bg-white shadow-md  hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden"
-              >
-                {/* Direction Icon */}
-                <div className="absolute top-2 left-2 bg-white/80 p-1  rounded-full  shadow-md ">
-                  {icon}
-                </div>
-
-                {/* Thumbnail */}
-                {item.thumbnail ? (
-                  <div className="w-full h-32 bg-zinc-100">
-                    <Image
-                      src={item.thumbnail}
-                      alt="Thumbnail"
-                      width={224}
-                      height={128}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-32 bg-zinc-100 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center shadow-inner">
-                      <File className="w-6 h-6 text-zinc-500" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Info */}
-                <div className="flex flex-col items-center text-center px-3 py-2 gap-1">
-                  <span className="text-sm font-medium text-zinc-800 truncate w-full">
-                    {item.file?.name || item.name || item.directoryPath}
-                  </span>
-
-                  {/* Progress */}
-                  <div className="w-full h-1.5 rounded-full bg-zinc-200 overflow-hidden shadow-inner">
-                    <div
-                      className="h-full bg-orange-500 transition-all duration-300"
-                      style={{ width: `${item.progress || 0}%` }}
-                    />
-                  </div>
-
-                  <div className="w-full flex justify-between text-[11px] text-zinc-500 mt-1 font-medium">
-                    <span>{item.progress}%</span>
-                    <span>{statusLabels[item.status] || item.status}</span>
-                  </div>
-                </div>
-
-                {/* Controls */}
-                <div className="w-full flex justify-center items-center gap-2 py-2 mb-1">
-                  {isReceive ? (
-                    <>
-                      {item.status !== "done" && item.status !== "canceled" && (
-                        <button
-                          className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
-                          onClick={() => cancelTransfer?.(item.transferId)}
-                          title="Cancel"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                      {item.status === "done" && item.downloaded ? (
-                        <p className="text-[11px] text-zinc-500 font-semibold">Downloaded</p>
-                      ) : (
-                        item.status === "done" &&
-                        !autoDownload &&
-                        item.blobUrl && (
-                          <button
-                            className="rounded-full p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-500 border border-blue-200 transition"
-                            onClick={() => fileDownload?.(item)}
-                            title="Download"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        )
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {item.status === "paused" && (
-                        <button
-                          className="rounded-full p-1.5 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 transition"
-                          onClick={() => resumeTransfer?.(item.transferId)}
-                          title="Resume"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      )}
-                      {item.status === "sending" && (
-                        <button
-                          className="rounded-full p-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border border-yellow-200 transition"
-                          onClick={() => pauseTransfer?.(item.transferId)}
-                          title="Pause"
-                        >
-                          <Pause className="w-4 h-4" />
-                        </button>
-                      )}
-                      {item.status !== "done" && item.status !== "canceled" && (
-                        <button
-                          className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
-                          onClick={() => cancelTransfer?.(item.transferId)}
-                          title="Cancel"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          items.map((item) => (
+            <TransferCard 
+              key={item.transferId}
+              item={item}
+              autoDownload={autoDownload}
+              pauseTransfer={pauseTransfer}
+              resumeTransfer={resumeTransfer}
+              cancelTransfer={cancelTransfer}
+              fileDownload={fileDownload}
+            />
+          ))
         )}
       </div>
     </div>

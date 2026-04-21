@@ -28,7 +28,7 @@ type SocketProviderProps = {
 export const SocketProvider = ({ children }: SocketProviderProps) => {
    const [socket, setSocket] = useState<Socket | null>(null);
    
-   const [ user , setuser ] = useState<User>( { id : "Unkown" , name: "Unkown"});
+   const [ user , setuser ] = useState<User>( { id : "Connecting" , name: "Connecting..."});
 
     useEffect(() => {
         const newSocket = io(process.env.NEXT_PUBLIC_SOCKET || "http://localhost:5500", {

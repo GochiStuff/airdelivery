@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   description:
     "Air Delivery lets you send large files instantly and securely with peer-to-peer WebRTC. No uploads, no sign-up, no file size limits. Just fast, private browser-to-browser sharing.",
   applicationName: "Air Delivery",
-  authors: [{ name: "Yash Jangid", url: "https://x.com/GochiStuff" }],
+  authors: [{ name: "Yash Jangid", url: "https://x.com/imgochi" }],
   keywords: [
     "send large files",
     "free file sharing",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     description:
       "Instantly send large files via peer-to-peer WebRTC—no cloud, no sign-up, no limits. Secure, encrypted, browser-to-browser transfer.",
     images: ["/og-banner.png"],
-    creator: "@GochiStuff",
+    creator: "@imgochi",
   },
   icons: {
     icon: "/favicon.ico",
@@ -131,7 +131,7 @@ export default function RootLayout({
           "@type": "ImageObject",
           url: "https://airdelivery.site/favicon.ico",
         },
-        sameAs: ["https://twitter.com/GochiStuff"],
+        sameAs: ["https://x.com/imgochi"],
       },
       {
         "@type": "SoftwareApplication",
@@ -213,6 +213,19 @@ export default function RootLayout({
         </SocketProvider>
 
         <Analytics />
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('SW registered');
+                }).catch(function(err) {
+                  console.log('SW registration failed: ', err);
+                });
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

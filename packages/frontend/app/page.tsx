@@ -5,7 +5,7 @@ import { useSocket } from "@/context/socketContext";
 import { useRouter } from "next/navigation";
 import AboutCard from "@/components/aboutCard";
 import { useInvitationToJoin } from "@/components/invitationToJoin";
-import { useWebRTCContext } from "@/context/WebRTCContext";
+import { useWebRTCState, useWebRTCActions } from "@/context/WebRTCContext";
 import InfoSection from "@/components/InfoSection";
 import TermsModal from "@/components/terms";
 
@@ -25,14 +25,17 @@ export default function MainPage() {
   // --- WebRTC / app context ------------------------------------------------
   const {
     flightId,
+    status,
+    nearByUsers,
+  } = useWebRTCState();
+
+  const {
     handleFileSelect,
     connectToFlight,
     inviteToFlight,
     leaveFlight,
-    status,
-    nearByUsers,
     refreshNearby,
-  } = useWebRTCContext();
+  } = useWebRTCActions();
 
   // Keep local flightCode in sync with any existing flightId from context
   useEffect(() => {

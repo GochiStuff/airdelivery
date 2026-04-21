@@ -62,9 +62,12 @@ export class FlightManager {
   getMembers(code: string) {
     const flight = this.flights.get(code);
     if (!flight) return [];
-    return flight.members.map(id => ({
-      id,
-      name: this.userManager.getUser(id)?.name || "Unknown"
-    }));
+    return flight.members.map(id => {
+      const user = this.userManager.getUser(id);
+      return {
+        id,
+        name: user?.name || `Peer-${id.slice(0, 4)}`
+      };
+    });
   }
 }
