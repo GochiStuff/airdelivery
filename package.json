@@ -1,0 +1,22 @@
+{
+  "name": "airdelivery-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter \"*\" dev",
+    "build": "bun run --filter \"*\" build",
+    "lint": "bun run --filter \"*\" lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.0"
+  }
+}

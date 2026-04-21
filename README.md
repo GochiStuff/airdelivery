@@ -1,49 +1,38 @@
-# AirDelivery
+# AirDelivery (Monorepo)
 
 **The fastest and most private way to send files — peer-to-peer.**  
 No cloud. No limits. Just you and the receiver.  
 
-**Live Site:** [https://airdelivery.site](https://airdelivery.site)  
-**Follow / Contact:** [@GochiStuff on X](https://x.com/GochiStuff)  
-
-## About the Project
-
-AirDelivery is an open-source peer-to-peer file transfer platform that allows users to send files directly between devices without uploads, signups, or size limits.  
-
-- **Secure & Private:** End-to-end encrypted transfers  
-- **Fast & Reliable:** Lightning-fast speeds (100+ Mbps)  
-- **Cross-platform:** Works on any modern browser (mobile & desktop)  
-- **No Limits:** Send files of any size, instantly  
-
 ---
 
-## Frontend
+## Project Structure
 
-The frontend is built with **Next.js** and provides a clean, minimal, and user-friendly interface for sending and receiving files.  
+This is a monorepo managed with **Bun Workspaces**.
 
-**Repository:** [airdelivery-frontend](https://github.com/GochiStuff/airdelievery-frontend)  
+- `packages/frontend`: Next.js frontend ([WebRTC signaling & UI])
+- `packages/backend`: Node.js backend ([Signaling server & Fallback])
 
-**Features:**  
+## Getting Started
 
-- Drag & drop support  
-- QR code pairing  
-- Room-based sharing  
-- Real-time progress tracking  
+### Prerequisites
+- [Bun](https://bun.sh) installed.
 
----
+### Installation
+```bash
+bun install
+```
 
-## Backend
+### Development
+To start both frontend and backend in development mode:
+```bash
+bun dev
+```
 
-The backend handles peer-to-peer signaling, room management, and optional server fallback for transfers when direct P2P is not possible.  
-
-**Repository:** [ad-backend](https://github.com/GochiStuff/ad-backend)  
-
-**Features:**  
-
-- Node.js + Express server  
-- WebSocket for real-time communication  
-- Secure room/session handling  
-- Optional proxied transfer fallback  
+### Building
+To build all packages:
+```bash
+bun build
+```
 
 ---
 
@@ -80,4 +69,3 @@ This project is licensed under the **GPLv3 License**. See `LICENSE` for details.
 
 ## Contact
 - **Follow / DM on X:** [@GochiStuff](https://x.com/GochiStuff)  
---

@@ -1,0 +1,27 @@
+{
+  "name": "ad-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "http": "^0.0.1-security",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.0",
+    "nanoid": "^5.1.5",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.8.1"
+  }
+}
