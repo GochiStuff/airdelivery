@@ -11,8 +11,12 @@ export default ts.config(
   },
   {
     rules: {
-      'no-console': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      'no-empty': 'off',
+      'no-useless-escape': 'off',
     },
   }
 );

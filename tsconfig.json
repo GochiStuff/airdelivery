@@ -9,7 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "*": ["packages/*/src/*"]
+      "frontend/*": ["packages/frontend/src/*"],
+      "backend/*": ["packages/backend/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

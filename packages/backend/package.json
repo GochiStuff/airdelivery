@@ -1,12 +1,12 @@
 {
-  "name": "ad-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "src/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "bun src/server.js",
-    "dev": "bun --watch src/server.js"
+    "start": "bun src/server.ts",
+    "dev": "bun --watch src/server.ts"
   },
   "keywords": [],
   "author": "",

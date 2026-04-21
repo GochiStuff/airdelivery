@@ -1,5 +1,5 @@
 {
-  "name": "airdelievery",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -21,7 +21,7 @@
     "lucide-react": "^0.515.0",
     "lz4js": "^0.2.0",
     "nanoid": "^5.1.5",
-    "next": "15.3.6",
+    "next": "^16.2.4",
     "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
     "progress-stream": "^2.0.0",
