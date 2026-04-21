@@ -1,10 +1,10 @@
 # AirDelivery Frontend
 
-The **Next.js frontend** for [AirDelivery](https://github.com/GochiStuff/airdelivery) — a fast, private, and peer-to-peer file sharing app.  
+The **Next.js frontend** for AirDelivery — a fast, private, and peer-to-peer file sharing app.  
 No cloud. No limits. Just direct, secure transfers.
 
 **Live App:** [https://airdelivery.site](https://airdelivery.site)  
-**Contact:** [@GochiStuff](https://x.com/GochiStuff)
+**Contact:** [@imgochi](https://x.com/imgochi)
 
 ---
 
@@ -30,18 +30,11 @@ It provides a simple and responsive interface for real-time file transfers betwe
 
 ---
 
-## Setup
+## Development
+
+This package is part of a monorepo. It is recommended to run it from the root:
 
 ```bash
-# Clone the repo
-git clone https://github.com/GochiStuff/airdelievery-frontend.git
-cd airdelievery-frontend
-
-# Install dependencies
-npm install
-
-# Create .env.local
-NEXT_PUBLIC_BACKEND_URL=https://your-backend-url.com
-
-# Run development server
-npm run dev
+# From the root directory
+bun dev --filter frontend
+```

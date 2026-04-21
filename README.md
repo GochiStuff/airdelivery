@@ -68,4 +68,4 @@ This project is licensed under the **GPLv3 License**. See `LICENSE` for details.
 ---
 
 ## Contact
-- **Follow / DM on X:** [@GochiStuff](https://x.com/GochiStuff)  
+**Follow / Contact:** [@imgochi on X](https://x.com/imgochi)  
