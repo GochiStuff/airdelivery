@@ -43,7 +43,8 @@ type RecvTransfer = {
 type Meta = {
   totalSent: number;
   totalReceived: number;
-  speedBps: number;
+  sendSpeedBps: number;
+  receiveSpeedBps: number;
 };
 
 export function useFileTransfer(
@@ -56,8 +57,33 @@ export function useFileTransfer(
   const [meta, setMeta] = useState<Meta>({
     totalSent: 0,
     totalReceived: 0,
-    speedBps: 0,
+    sendSpeedBps: 0,
+    receiveSpeedBps: 0,
   });
+
+  // --- Real-time metrics tracking ---
+  const totalSentRef = useRef(0);
+  const totalReceivedRef = useRef(0);
+  const sendThroughputAccumulator = useRef(0);
+  const receiveThroughputAccumulator = useRef(0);
+
+  // Periodic metrics sync (every 1s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMeta((prev) => ({
+        ...prev,
+        totalSent: totalSentRef.current,
+        totalReceived: totalReceivedRef.current,
+        sendSpeedBps: sendThroughputAccumulator.current,
+        receiveSpeedBps: receiveThroughputAccumulator.current,
+      }));
+      // Reset accumulators for next second
+      sendThroughputAccumulator.current = 0;
+      receiveThroughputAccumulator.current = 0;
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // --- Constants / tuning  ( MOST OF THESE WERE SET AFTER BENCHMARKING DIFF SETTINGS ) ---------------------------------------------
   const MAX_RAM_SIZE = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
@@ -288,8 +314,6 @@ export function useFileTransfer(
 
       const total = file.size;
       let sent = 0;
-      let lastTime = Date.now();
-      let lastSent = 0;
 
       const compress = shouldCompress(file.name);
 
@@ -389,21 +413,19 @@ export function useFileTransfer(
           }
         }
 
-        // Progress tracking (throttled)
+        // Metrics tracking (real-time via refs)
         sent += chunk.length;
         offset += chunk.length;
-        const now = Date.now();
+        totalSentRef.current += chunk.length;
+        sendThroughputAccumulator.current += chunk.length;
+
+        // Individual Progress tracking (throttled for UI)
         const pct = (sent / total) * 100;
-        if (now - lastTime > PROGRESS_INTERVAL_MS || pct - (lastSent / total) * 100 >= 5) {
+        // Update individual queue item progress occasionally
+        if (Math.round(pct) % 5 === 0) {
           setQueue((q) =>
             q.map((x) => (x.transferId === transferId ? { ...x, progress: Math.round(pct) } : x)),
           );
-          const bytesSinceLast = sent - lastSent;
-          const timeElapsedSec = (now - lastTime) / 1000;
-          const speed = timeElapsedSec > 0 ? Math.round(bytesSinceLast / timeElapsedSec) : 0;
-          setMeta((m) => ({ ...m, speedBps: speed }));
-          lastTime = now;
-          lastSent = sent;
         }
       }
 
@@ -415,7 +437,10 @@ export function useFileTransfer(
       setQueue((q) =>
         q.map((x) => (x.transferId === transferId ? { ...x, progress: 100, status: 'done' } : x)),
       );
-      setMeta((m) => ({ ...m, totalSent: m.totalSent + total }));
+      
+      // Stats update (persistent)
+      updateStats(1, total);
+
       addToHistory({
         id: transferId,
         name: directoryPath,
@@ -425,7 +450,7 @@ export function useFileTransfer(
         thumbnail,
       });
     },
-    [dataChannel, safeSend],
+    [dataChannel, safeSend, updateStats],
   );
 
   // ------------------------- RECEIVE  ---------------------------
@@ -470,6 +495,10 @@ export function useFileTransfer(
           if (!rec.writer) return;
           await rec.writer.write(new Uint8Array(chunk));
           rec.received += chunk.byteLength;
+          
+          // Metrics tracking (real-time via refs)
+          totalReceivedRef.current += chunk.byteLength;
+          receiveThroughputAccumulator.current += chunk.byteLength;
 
           if (
             !rec.lastProgressUpdate ||
@@ -500,7 +529,7 @@ export function useFileTransfer(
           );
           addToHistory({
             id: transferId,
-            name: rec.directoryPath || 'Unknown File', // Wait, rec doesn't have directoryPath in its type but it's used?
+            name: rec.directoryPath || 'Unknown File',
             size: rec.size,
             type: 'receive',
             status: 'error',
@@ -519,12 +548,6 @@ export function useFileTransfer(
         rec.writer = null;
         currentReceivingIdRef.current = null;
         delete incoming.current[transferId];
-
-        const temp = meta.totalReceived + rec.received;
-        setMeta((m) => ({
-          ...m,
-          totalReceived: temp,
-        }));
 
         setRecvQueue((rq) =>
           rq.map((r) =>
@@ -757,7 +780,13 @@ export function useFileTransfer(
 
     incoming.current = {};
     setRecvQueue([]);
-    setMeta({ totalReceived: 0, totalSent: 0, speedBps: 0 });
+    
+    totalSentRef.current = 0;
+    totalReceivedRef.current = 0;
+    sendThroughputAccumulator.current = 0;
+    receiveThroughputAccumulator.current = 0;
+
+    setMeta({ totalReceived: 0, totalSent: 0, sendSpeedBps: 0, receiveSpeedBps: 0 });
   }
 
   // ------------------------- Setup handlers ----------------------------
