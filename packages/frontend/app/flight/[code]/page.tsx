@@ -1,30 +1,20 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import {
-  File,
-  Folder,
-  Share2,
-  Users,
-  User,
-  ScanQrCode,
-  RefreshCwIcon,
-  LogOut,
-} from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
-import { Badge } from "@/lib/badge";
-import { useWebRTCState, useWebRTCActions } from "@/context/WebRTCContext";
-import { MetricsSection } from "@/components/room/MetricSection";
-import { QueueTray } from "@/components/room/QueueTray";
-import AsktoShareSection from "@/components/room/share";
-import SharePopup from "@/components/AskForShare";
-
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { File, Folder, Share2, Users, User, ScanQrCode, RefreshCwIcon, LogOut } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Badge } from '@/lib/badge';
+import { useWebRTCState, useWebRTCActions } from '@/context/WebRTCContext';
+import { MetricsSection } from '@/components/room/MetricSection';
+import { QueueTray } from '@/components/room/QueueTray';
+import AsktoShareSection from '@/components/room/share';
+import SharePopup from '@/components/AskForShare';
 
 export default function RoomPage() {
   // --- route / flight code ------------------------------------------------
   const { code } = useParams();
-  const flight = typeof code === "string" ? code : "";
+  const flight = typeof code === 'string' ? code : '';
 
   // --- local UI state ----------------------------------------------------
   const [showQR, setShowQR] = useState(false);
@@ -47,16 +37,8 @@ export default function RoomPage() {
     setAutoDownload,
   } = useWebRTCActions();
 
-  const {
-    meta,
-    recvQueue,
-    queue,
-    autoDownload,
-    status,
-    members,
-    nearByUsers,
-    flightId,
-  } = useWebRTCState();
+  const { meta, recvQueue, queue, autoDownload, status, members, nearByUsers, flightId } =
+    useWebRTCState();
 
   // Missing setAutoDownload? Added it to state context if needed or use hook directly.
   // For now I'll just assume it's in actions or state.
@@ -66,7 +48,7 @@ export default function RoomPage() {
   const handleLeave = () => {
     setIsLeft(true);
     leaveFlight();
-    router.push("/");
+    router.push('/');
   };
 
   useEffect(() => {
@@ -77,7 +59,7 @@ export default function RoomPage() {
     const handleSwitch = () => {
       if (flightId && flightId !== flight) {
         const leave = confirm(
-          `You are already in flight "${flightId}". Leave it and join "${flight}"?`
+          `You are already in flight "${flightId}". Leave it and join "${flight}"?`,
         );
         if (leave) {
           leaveFlight();
@@ -125,18 +107,18 @@ export default function RoomPage() {
             <div className="flex flex-wrap items-center gap-3 mt-1 text-sm">
               <Badge
                 color={
-                  typeof status === "string" && status.includes("Connection")
-                    ? "green"
-                    : status.includes("Failed")
-                    ? "red"
-                    : "yellow"
+                  typeof status === 'string' && status.includes('Connection')
+                    ? 'green'
+                    : status.includes('Failed')
+                      ? 'red'
+                      : 'yellow'
                 }
               >
                 {status}
               </Badge>
 
               <Badge color="gray">
-                {members.length} Member{members.length !== 1 ? "s" : ""}
+                {members.length} Member{members.length !== 1 ? 's' : ''}
               </Badge>
             </div>
           </div>
@@ -193,11 +175,13 @@ export default function RoomPage() {
                 </span>
               </div>
 
-              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-3 text-center">Share this Flight</h2>
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-3 text-center">
+                Share this Flight
+              </h2>
 
               <div className="flex justify-center mb-4 p-2 bg-white rounded-xl">
                 <QRCodeSVG
-                  value={typeof window !== "undefined" ? window.location.href : ""}
+                  value={typeof window !== 'undefined' ? window.location.href : ''}
                   size={180}
                 />
               </div>
@@ -206,17 +190,17 @@ export default function RoomPage() {
                 <div className="flex items-center gap-2 w-full">
                   <input
                     className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg px-2 py-1 text-sm font-mono border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300"
-                    value={typeof window !== "undefined" ? window.location.href : ""}
+                    value={typeof window !== 'undefined' ? window.location.href : ''}
                     readOnly
                     onFocus={(e) => e.target.select()}
                   />
 
                   <button
                     onClick={async () => {
-                      if (typeof window !== "undefined" && navigator.share) {
+                      if (typeof window !== 'undefined' && navigator.share) {
                         await navigator.share({
-                          title: "Join my Flight",
-                          text: "Join my Flight on AirDelivery!",
+                          title: 'Join my Flight',
+                          text: 'Join my Flight on AirDelivery!',
                           url: window.location.href,
                         });
                       }
@@ -228,10 +212,14 @@ export default function RoomPage() {
                   </button>
                 </div>
 
-                <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Ask the reciver to join.</span>
+                <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Ask the reciver to join.
+                </span>
               </div>
 
-              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 text-center">Scan QR or share the link to join this flight.</p>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 text-center">
+                Scan QR or share the link to join this flight.
+              </p>
             </div>
           </div>
         )}
@@ -254,8 +242,12 @@ export default function RoomPage() {
               }}
             >
               <Folder className="w-12 h-12 text-orange-500 mb-3" />
-              <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">Drag & Drop files or folders</p>
-              <span className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">or select manually</span>
+              <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">
+                Drag & Drop files or folders
+              </p>
+              <span className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                or select manually
+              </span>
 
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 {/* Select files button */}
@@ -288,7 +280,7 @@ export default function RoomPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-orange-500" />
                 <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
-                  {members.length <= 1 ? "Nearby Users" : "In Flight"}
+                  {members.length <= 1 ? 'Nearby Users' : 'In Flight'}
                 </h2>
               </div>
 
@@ -299,7 +291,7 @@ export default function RoomPage() {
                   title="Refresh"
                 >
                   <RefreshCwIcon
-                    className={`w-5 h-5 ${isSpinning ? "animate-spin" : "transition-transform"} dark:text-zinc-400`}
+                    className={`w-5 h-5 ${isSpinning ? 'animate-spin' : 'transition-transform'} dark:text-zinc-400`}
                   />
                 </button>
               )}
@@ -308,7 +300,7 @@ export default function RoomPage() {
             <div className="flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
               {(members.length <= 1 ? nearByUsers : members).length === 0 ? (
                 <div className="text-zinc-400 dark:text-zinc-600 text-sm text-center py-6">
-                  {members.length <= 1 ? "No nearby users" : "No members"}
+                  {members.length <= 1 ? 'No nearby users' : 'No members'}
                 </div>
               ) : (
                 (members.length <= 1 ? nearByUsers : members).map((m, idx) => (
@@ -320,8 +312,12 @@ export default function RoomPage() {
                   >
                     <User className="w-6 h-6 text-orange-500 bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-300 dark:hover:bg-orange-700 rounded-full p-1" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{m.name}</span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate">ID: {m.id}</span>
+                      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                        {m.name}
+                      </span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate">
+                        ID: {m.id}
+                      </span>
                     </div>
                   </button>
                 ))

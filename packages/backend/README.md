@@ -12,6 +12,7 @@ Handles peer-to-peer signaling, room management, and optional server fallback fo
 This package handles the signaling server logic required to establish WebRTC connections between peers.
 
 ### Features
+
 - Node.js + Express server (running on Bun)
 - WebSocket for real-time signaling
 - Secure room/session handling
@@ -20,6 +21,7 @@ This package handles the signaling server logic required to establish WebRTC con
 ---
 
 ## Tech Stack
+
 - **Runtime:** Bun
 - **Framework:** Express
 - **Realtime:** Socket.io

@@ -1,4 +1,4 @@
-import type { UserManager } from "./UserManager.js";
+import type { UserManager } from './UserManager.js';
 
 export interface Flight {
   ownerId: string;
@@ -25,8 +25,8 @@ export class FlightManager {
 
   joinFlight(code: string, socketId: string): { success: boolean; message?: string } {
     const flight = this.flights.get(code);
-    if (!flight) return { success: false, message: "Flight not found" };
-    if (flight.members.length >= 2) return { success: false, message: "Flight is full" };
+    if (!flight) return { success: false, message: 'Flight not found' };
+    if (flight.members.length >= 2) return { success: false, message: 'Flight is full' };
 
     if (!flight.members.includes(socketId)) {
       flight.members.push(socketId);
@@ -43,7 +43,7 @@ export class FlightManager {
         this.flights.delete(code); // Original logic deletes flight if owner leaves
         affectedCodes.push(code);
       } else if (flight.members.includes(socketId)) {
-        flight.members = flight.members.filter(id => id !== socketId);
+        flight.members = flight.members.filter((id) => id !== socketId);
         affectedCodes.push(code);
       }
     }
@@ -62,11 +62,11 @@ export class FlightManager {
   getMembers(code: string) {
     const flight = this.flights.get(code);
     if (!flight) return [];
-    return flight.members.map(id => {
+    return flight.members.map((id) => {
       const user = this.userManager.getUser(id);
       return {
         id,
-        name: user?.name || `Peer-${id.slice(0, 4)}`
+        name: user?.name || `Peer-${id.slice(0, 4)}`,
       };
     });
   }

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
-import React, { useState } from "react";
-import HistoryDrawer from "./HistoryDrawer";
-import { Github, Clock, Menu } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useState } from 'react';
+import HistoryDrawer from './HistoryDrawer';
+import { Github, Clock, Menu } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const [showSheet, setShowSheet] = useState(false);
@@ -13,16 +13,19 @@ export default function Header() {
   return (
     <>
       <HistoryDrawer show={showSheet} onClose={() => setShowSheet(false)} />
-      
+
       <header className="w-full h-16 flex items-center justify-between px-6 md:px-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 transition-all duration-300">
         {/* Brand Section */}
-        <Link href="/" className="flex items-center gap-2.5 group active:scale-95 transition-transform">
-          <Image 
-            src="/icons/logo.png" 
-            alt="AirDelivery Logo" 
-            width={36} 
-            height={36} 
-            className="object-contain" 
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 group active:scale-95 transition-transform"
+        >
+          <Image
+            src="/icons/logo.png"
+            alt="AirDelivery Logo"
+            width={36}
+            height={36}
+            className="object-contain"
             priority
           />
           <span className="text-xl font-bold tracking-tighter text-zinc-900 dark:text-zinc-100 uppercase select-none">

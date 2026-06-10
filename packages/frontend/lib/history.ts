@@ -1,18 +1,18 @@
-import { get, set, update } from "idb-keyval";
+import { get, set, update } from 'idb-keyval';
 
 export type HistoryItem = {
   id: string;
   name: string;
   size: number;
-  type: "send" | "receive";
+  type: 'send' | 'receive';
   timestamp: number;
-  status: "done" | "error" | "canceled";
+  status: 'done' | 'error' | 'canceled';
   thumbnail?: string;
 };
 
-const HISTORY_KEY = "airdelivery_transfer_history";
+const HISTORY_KEY = 'airdelivery_transfer_history';
 
-export async function addToHistory(item: Omit<HistoryItem, "timestamp">) {
+export async function addToHistory(item: Omit<HistoryItem, 'timestamp'>) {
   const newItem: HistoryItem = {
     ...item,
     timestamp: Date.now(),

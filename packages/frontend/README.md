@@ -14,19 +14,21 @@ This repository contains the **frontend** for AirDelivery.
 It provides a simple and responsive interface for real-time file transfers between devices using WebRTC.
 
 ### Features
-- Drag & drop file sharing  
-- QR code pairing  
-- Room-based transfers  
-- Real-time progress tracking  
-- Fully private and encrypted  
+
+- Drag & drop file sharing
+- QR code pairing
+- Room-based transfers
+- Real-time progress tracking
+- Fully private and encrypted
 
 ---
 
 ## Tech Stack
-- **Framework:** Next.js (React)  
-- **Styling:** Tailwind CSS  
-- **Realtime:** WebSocket  
-- **Peer-to-Peer:** WebRTC  
+
+- **Framework:** Next.js (React)
+- **Styling:** Tailwind CSS
+- **Realtime:** WebSocket
+- **Peer-to-Peer:** WebRTC
 
 ---
 

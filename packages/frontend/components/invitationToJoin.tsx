@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useSocket } from "../context/socketContext";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useSocket } from '../context/socketContext';
+import { useRouter } from 'next/navigation';
 
 type Invitation = {
   flightCode: string;
@@ -16,18 +16,14 @@ export function useInvitationToJoin() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleInvitedToFlight = ({
-      flightCode,
-      fromId,
-      fromName,
-    }: Invitation) => {
+    const handleInvitedToFlight = ({ flightCode, fromId, fromName }: Invitation) => {
       setInvitation({ flightCode, fromId, fromName });
       setTimer(60);
     };
 
-    socket.on("invitedToFlight", handleInvitedToFlight);
+    socket.on('invitedToFlight', handleInvitedToFlight);
     return () => {
-      socket.off("invitedToFlight", handleInvitedToFlight);
+      socket.off('invitedToFlight', handleInvitedToFlight);
     };
   }, [socket]);
 
@@ -43,26 +39,33 @@ export function useInvitationToJoin() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [invitation , socket]);
+  }, [invitation, socket]);
 
-    const router = useRouter();
+  const router = useRouter();
 
-    const accept = () => {
+  const accept = () => {
     if (invitation) {
-        router.push(`/flight/${invitation.flightCode}`); 
-        setInvitation(null);
+      router.push(`/flight/${invitation.flightCode}`);
+      setInvitation(null);
     }
-    };
+  };
 
   const decline = () => {
     setInvitation(null);
-}
+  };
 
   const InvitationPopup = invitation ? (
     <div className="fixed top-4 right-4 z-500  animate-fadeIn">
       <div className="bg-white border shadow-xl rounded-2xl  w-xs sm:w-sm overflow-hidden">
         <div className="p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-1">Join Flight<span className="font-mono font-extrabold text-orange-600"> {invitation.flightCode}</span> ? </h2> 
+          <h2 className="text-lg font-bold text-gray-800 mb-1">
+            Join Flight
+            <span className="font-mono font-extrabold text-orange-600">
+              {' '}
+              {invitation.flightCode}
+            </span>{' '}
+            ?{' '}
+          </h2>
           <p className="text-md text-gray-600 mb-3">
             <span className="font-medium">{invitation.fromName}</span> wants to send you files.
             <br />

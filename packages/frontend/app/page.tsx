@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { useSocket } from "@/context/socketContext";
-import { useRouter } from "next/navigation";
-import AboutCard from "@/components/aboutCard";
-import { useInvitationToJoin } from "@/components/invitationToJoin";
-import { useWebRTCState, useWebRTCActions } from "@/context/WebRTCContext";
-import InfoSection from "@/components/InfoSection";
-import TermsModal from "@/components/terms";
-import HistoryDrawer from "@/components/HistoryDrawer";
-import { Clock } from "lucide-react";
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { useSocket } from '@/context/socketContext';
+import { useRouter } from 'next/navigation';
+import AboutCard from '@/components/aboutCard';
+import { useInvitationToJoin } from '@/components/invitationToJoin';
+import { useWebRTCState, useWebRTCActions } from '@/context/WebRTCContext';
+import InfoSection from '@/components/InfoSection';
+import TermsModal from '@/components/terms';
+import HistoryDrawer from '@/components/HistoryDrawer';
+import { Clock } from 'lucide-react';
 
 export default function MainPage() {
   const router = useRouter();
   const { socket, user } = useSocket();
 
   // Local form state for entering / showing flight code
-  const [flightCode, setFlightCode] = useState<string>("");
+  const [flightCode, setFlightCode] = useState<string>('');
 
   // Modal for showing terms
   const [showTerms, setShowTerms] = useState(false);
@@ -28,19 +28,10 @@ export default function MainPage() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // --- WebRTC / app context ------------------------------------------------
-  const {
-    flightId,
-    status,
-    nearByUsers,
-  } = useWebRTCState();
+  const { flightId, status, nearByUsers } = useWebRTCState();
 
-  const {
-    handleFileSelect,
-    connectToFlight,
-    inviteToFlight,
-    leaveFlight,
-    refreshNearby,
-  } = useWebRTCActions();
+  const { handleFileSelect, connectToFlight, inviteToFlight, leaveFlight, refreshNearby } =
+    useWebRTCActions();
 
   // Keep local flightCode in sync with any existing flightId from context
   useEffect(() => {
@@ -52,7 +43,7 @@ export default function MainPage() {
   // --- Create / Join handlers ----------------------------------------------
   const handleCreate = async () => {
     // Ensure user accepted terms before creating a flight
-    const accepted = localStorage.getItem("acceptedTerms");
+    const accepted = localStorage.getItem('acceptedTerms');
     if (!accepted) {
       setShowTerms(true);
       return;
@@ -65,7 +56,7 @@ export default function MainPage() {
       router.push(`/flight/${flightId}`);
     } else {
       // Ask server to create a new flight and navigate to it
-      socket.emit("createFlight", (response: { code: string }) => {
+      socket.emit('createFlight', (response: { code: string }) => {
         router.push(`/flight/${response.code}`);
       });
     }
@@ -93,7 +84,7 @@ export default function MainPage() {
   };
 
   const handleAccept = () => {
-    localStorage.setItem("acceptedTerms", "true");
+    localStorage.setItem('acceptedTerms', 'true');
   };
 
   const invitationPop = useInvitationToJoin();
@@ -117,11 +108,11 @@ export default function MainPage() {
                 <div className="text-[12px] font-medium mt-0.5">
                   <span
                     className={`${
-                      status.includes("Connection")
-                        ? "text-green-600"
-                        : status.includes("Failed") || status.includes("Disconnected")
-                        ? "text-red-600"
-                        : "text-yellow-500"
+                      status.includes('Connection')
+                        ? 'text-green-600'
+                        : status.includes('Failed') || status.includes('Disconnected')
+                          ? 'text-red-600'
+                          : 'text-yellow-500'
                     }`}
                   >
                     {status}
@@ -163,22 +154,33 @@ export default function MainPage() {
           <h1 className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 font-medium mt-1 max-w-md">
             The fastest and most private way to send files — peer to peer.
           </h1>
-          <p className="mt-1 text-sm mb-2 text-zinc-400 dark:text-zinc-500 max-w-md">No cloud. No limits. Just you and the receiver.</p>
+          <p className="mt-1 text-sm mb-2 text-zinc-400 dark:text-zinc-500 max-w-md">
+            No cloud. No limits. Just you and the receiver.
+          </p>
         </section>
 
         {/* Tagline (mobile) */}
         <section className="relative md:hidden w-full flex flex-col items-center text-center px-6 mt space-y-3">
-          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Share files instantly across devices.</h1>
-          <h2 className="text-sm text-zinc-500 dark:text-zinc-400">Open the site on both devices — no signups, no uploads, just P2P.</h2>
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">
+            Share files instantly across devices.
+          </h1>
+          <h2 className="text-sm text-zinc-500 dark:text-zinc-400">
+            Open the site on both devices — no signups, no uploads, just P2P.
+          </h2>
         </section>
 
         {/* Nearby users + Ticket area */}
-        <section aria-labelledby="nearby-users" className="flex relative items-center sm:items-start flex-col md:flex-row gap-2">
+        <section
+          aria-labelledby="nearby-users"
+          className="flex relative items-center sm:items-start flex-col md:flex-row gap-2"
+        >
           {/* Near-by users grid: only shown when not already in a flight */}
           {!flightId && (
             <div className="z-50 p-2 md:mt-6 gap-2 grid sm:absolute sm:-left-20 grid-flow-col auto-cols-max md:grid-flow-row md:grid-cols-1 max-w-screen">
               {nearByUsers.length === 0 && (
-                <p className="text-sm animate-fadeIn md:-rotate-90 font-mono md:mt-10 md:h-5 dark:text-zinc-400">No user nearby</p>
+                <p className="text-sm animate-fadeIn md:-rotate-90 font-mono md:mt-10 md:h-5 dark:text-zinc-400">
+                  No user nearby
+                </p>
               )}
 
               {nearByUsers.map((m) => {
@@ -186,7 +188,7 @@ export default function MainPage() {
                 return (
                   <div
                     key={m.id}
-                    className={`group animate-fadeIn w-16 h-16 origin-right bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center drag-target relative hover:w-52 hover:h-24 hover:scale-110 hover:z-10 ${isDragOver ? "w-52 h-24 scale-110 z-10" : ""}`}
+                    className={`group animate-fadeIn w-16 h-16 origin-right bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-sm overflow-hidden transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center drag-target relative hover:w-52 hover:h-24 hover:scale-110 hover:z-10 ${isDragOver ? 'w-52 h-24 scale-110 z-10' : ''}`}
                     onDragEnter={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -204,7 +206,7 @@ export default function MainPage() {
                     }}
                     onClick={() => {
                       // Quick create flight and invite this user
-                      socket?.emit("createFlight", (response: { code: string }) => {
+                      socket?.emit('createFlight', (response: { code: string }) => {
                         connectToFlight(response.code);
                         inviteToFlight(m, response.code);
                         router.push(`/flight/${response.code}`);
@@ -218,7 +220,7 @@ export default function MainPage() {
                       if (flightId) return;
 
                       // Create a flight and invite user
-                      socket.emit("createFlight", (response: { code: string }) => {
+                      socket.emit('createFlight', (response: { code: string }) => {
                         connectToFlight(response.code);
                         inviteToFlight(m, response.code);
                       });
@@ -228,7 +230,7 @@ export default function MainPage() {
                       const files: File[] = [];
                       for (let i = 0; i < items.length; i++) {
                         const item = items[i];
-                        if (item.kind === "file") {
+                        if (item.kind === 'file') {
                           const file = item.getAsFile();
                           if (file) files.push(file);
                         }
@@ -239,20 +241,34 @@ export default function MainPage() {
                       files.forEach((file) => dt.items.add(file));
                       const fileList = dt.files;
 
-                      handleFileSelect({ target: { files: fileList } } as ChangeEvent<HTMLInputElement>);
+                      handleFileSelect({
+                        target: { files: fileList },
+                      } as ChangeEvent<HTMLInputElement>);
                     }}
                   >
                     {/* Compact view */}
                     <div className="absolute inset-0 flex items-center justify-center text-center px-2 pointer-events-none">
-                      <span className="text-sm font-semibold group-hover:opacity-0 text-zinc-800 dark:text-zinc-200 transition-opacity">{m.name}</span>
+                      <span className="text-sm font-semibold group-hover:opacity-0 text-zinc-800 dark:text-zinc-200 transition-opacity">
+                        {m.name}
+                      </span>
                     </div>
 
                     {/* Expanded view */}
-                    <div className={`absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-200 px-2 group-hover:opacity-100 ${isDragOver ? "opacity-100" : ""}`}>
-                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{m.name}</span>
-                      <code className="text-[0.7rem] text-zinc-800 dark:text-zinc-300 break-words text-center">ID: {m.id ? m.id : "Connecting..."}</code>
-                      <code className="mt-1 text-[0.7rem] text-zinc-700 dark:text-zinc-400 bg-white/70 dark:bg-zinc-800/70 border border-dotted border-black dark:border-white rounded-xl px-2 py-1">Drop files to send</code>
-                      <span className="text-[0.7rem] dark:text-zinc-400">click to quick create a flight</span>
+                    <div
+                      className={`absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-200 px-2 group-hover:opacity-100 ${isDragOver ? 'opacity-100' : ''}`}
+                    >
+                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+                        {m.name}
+                      </span>
+                      <code className="text-[0.7rem] text-zinc-800 dark:text-zinc-300 break-words text-center">
+                        ID: {m.id ? m.id : 'Connecting...'}
+                      </code>
+                      <code className="mt-1 text-[0.7rem] text-zinc-700 dark:text-zinc-400 bg-white/70 dark:bg-zinc-800/70 border border-dotted border-black dark:border-white rounded-xl px-2 py-1">
+                        Drop files to send
+                      </code>
+                      <span className="text-[0.7rem] dark:text-zinc-400">
+                        click to quick create a flight
+                      </span>
                     </div>
                   </div>
                 );
@@ -265,26 +281,36 @@ export default function MainPage() {
             <div className="relative flex flex-col items-center pt-24 rounded-3xl shadow-2xl text-zinc-900 bg-orange-600 min-h-[480px] w-full max-w-md transition-all overflow-hidden ticket-border">
               {/* Ticket header */}
               <div className="flex flex-col items-center mb-6">
-                <span className="uppercase tracking-widest text-xs font-bold text-zinc-100 opacity-70">airdelivery.site</span>
-                <h2 className="text-3xl font-extrabold tracking-tight text-zinc-100 mt-2 mb-1">{user.name}</h2>
+                <span className="uppercase tracking-widest text-xs font-bold text-zinc-100 opacity-70">
+                  airdelivery.site
+                </span>
+                <h2 className="text-3xl font-extrabold tracking-tight text-zinc-100 mt-2 mb-1">
+                  {user.name}
+                </h2>
                 <span className="text-sm text-zinc-100 opacity-70">Your file transfer ticket</span>
               </div>
 
               {/* File & folder prompt (keeps original hidden button) */}
               <div className="flex flex-row space-x-4 w-full mb-2 px-8">
                 <label className="flex flex-col flex-1 items-center text-zinc-700 px-8 py-3 rounded-xl bg-zinc-100 hover:bg-zinc-100 font-semibold shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer ">
-                  <span>{flightId ? "You're currently in a flight...." : "Tap to start sending"}</span>
+                  <span>
+                    {flightId ? "You're currently in a flight...." : 'Tap to start sending'}
+                  </span>
                   <button className="hidden" onClick={handleCreate} />
                 </label>
               </div>
 
-              <p className="text-xs text-zinc-50 mb-0 tracking-tight uppercase font-mono">Select files or folder to send</p>
+              <p className="text-xs text-zinc-50 mb-0 tracking-tight uppercase font-mono">
+                Select files or folder to send
+              </p>
 
               {/* Divider */}
               <div className="w-full flex justify-between items-center h-8">
                 <div className="w-8 h-8 bg-zinc-300 dark:bg-zinc-800 rounded-full -ml-4"></div>
                 <div className="flex-grow border-t-2 border-dashed border-zinc-200 dark:border-zinc-700" />
-                <span className="mx-4 text-zinc-50 font-semibold px-2 bg-orange-600 tracking-widest uppercase text-xs">or</span>
+                <span className="mx-4 text-zinc-50 font-semibold px-2 bg-orange-600 tracking-widest uppercase text-xs">
+                  or
+                </span>
                 <div className="flex-grow border-t-2 border-dashed border-zinc-200 dark:border-zinc-700" />
                 <div className="w-8 h-8 bg-zinc-300 dark:bg-zinc-800 rounded-full -mr-4"></div>
               </div>
@@ -311,24 +337,31 @@ export default function MainPage() {
                 </button>
               </div>
 
-              <p className="text-xs text-zinc-50 tracking-tight uppercase font-mono mb-4">Enter your flight code to receive</p>
+              <p className="text-xs text-zinc-50 tracking-tight uppercase font-mono mb-4">
+                Enter your flight code to receive
+              </p>
 
-              <code className="text-xs absolute bottom-5 right-8 tracking-tight text-zinc-100 mt-2 -mb-3">ID:{user.id}</code>
+              <code className="text-xs absolute bottom-5 right-8 tracking-tight text-zinc-100 mt-2 -mb-3">
+                ID:{user.id}
+              </code>
             </div>
 
             <div className="bg-zinc-900 dark:bg-zinc-950 rounded-xl shadow-xl p-4 md:p-5 text-zinc-200 text-sm md:text-base max-w-md w-full space-y-3">
               <h2 className="text-2xl font-bold text-white tracking-tight">About</h2>
               <p className="leading-relaxed text-zinc-400">
-                <span className="text-white font-medium">Airdelivery</span> lets you send files instantly, securely, and directly — no signups, no uploads, no limits.
+                <span className="text-white font-medium">Airdelivery</span> lets you send files
+                instantly, securely, and directly — no signups, no uploads, no limits.
               </p>
-              <p className="text-zinc-500 text-xs dark:text-zinc-600">Peer-to-peer, encrypted, and works across all modern devices.</p>
+              <p className="text-zinc-500 text-xs dark:text-zinc-600">
+                Peer-to-peer, encrypted, and works across all modern devices.
+              </p>
 
               <div className="flex justify-between items-center mt-2">
                 <AboutCard />
 
                 <a
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                    "Check out Airdelivery.io — fast, secure, unlimited P2P file sharing. No cloud, no signup. #Airdelivery #FileSharing"
+                    'Check out Airdelivery.io — fast, secure, unlimited P2P file sharing. No cloud, no signup. #Airdelivery #FileSharing',
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

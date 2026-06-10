@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const feedbackSchema = new mongoose.Schema({
   name: {
@@ -12,11 +12,11 @@ const feedbackSchema = new mongoose.Schema({
     required: true,
     trim: true,
     lowercase: true,
-    match: [/.+\@.+\..+/, "Please fill a valid email address"],
+    match: [/.+\@.+\..+/, 'Please fill a valid email address'],
   },
   type: {
     type: String,
-    default: "other",
+    default: 'other',
     maxlength: 100,
     required: true,
   },
@@ -32,4 +32,4 @@ const feedbackSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.models.Feedback || mongoose.model("Feedback", feedbackSchema);
+export default mongoose.models.Feedback || mongoose.model('Feedback', feedbackSchema);

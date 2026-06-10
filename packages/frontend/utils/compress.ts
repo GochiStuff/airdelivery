@@ -1,4 +1,4 @@
-import { zipSync } from "fflate";
+import { zipSync } from 'fflate';
 
 export async function zipFiles(files: File[], zipName: string): Promise<File> {
   const data: Record<string, Uint8Array> = {};
@@ -11,7 +11,7 @@ export async function zipFiles(files: File[], zipName: string): Promise<File> {
   }
 
   const zipped = zipSync(data);
-  return new File([zipped as any], zipName.endsWith(".zip") ? zipName : `${zipName}.zip`, {
-    type: "application/zip",
+  return new File([zipped as any], zipName.endsWith('.zip') ? zipName : `${zipName}.zip`, {
+    type: 'application/zip',
   });
 }

@@ -97,15 +97,15 @@ io.on('connection', (socket) => {
   const peer = new Peer(socket, socket.request, { debug: NODE_ENV === 'development' });
 
   userManager.addUser(socket.id, {
-      id: socket.id,
-      name,
-      ipPrefix: peer.ipPrefix,
-      isPrivate: peer.isPrivate,
-      ip: peer.ip,
-      inFlight: false
+    id: socket.id,
+    name,
+    ipPrefix: peer.ipPrefix,
+    isPrivate: peer.isPrivate,
+    ip: peer.ip,
+    inFlight: false,
   });
 
-  socket.emit("yourName", { id: socket.id, name });
+  socket.emit('yourName', { id: socket.id, name });
 
   socket.on('createFlight', (callback) => {
     let code;

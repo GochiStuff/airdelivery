@@ -1,23 +1,20 @@
-"use client";
+'use client';
 
-import {
-  Check,
-  Share2,
-} from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Check, Share2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 const SharePopup = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  const shareUrl = "https://airdelivery.site";
-  const shareText = encodeURIComponent("Send files instantly and privately with AirDelivery!");
+  const shareUrl = 'https://airdelivery.site';
+  const shareText = encodeURIComponent('Send files instantly and privately with AirDelivery!');
 
   useEffect(() => {
-    const hidePopup = localStorage.getItem("hideSharePopup");
+    const hidePopup = localStorage.getItem('hideSharePopup');
     if (!hidePopup) {
-      const timer = setTimeout(() => setShowPopup(true),  90 * 1000); // show after 1.5 min
+      const timer = setTimeout(() => setShowPopup(true), 90 * 1000); // show after 1.5 min
       return () => clearTimeout(timer);
     }
   }, []);
@@ -30,7 +27,7 @@ const SharePopup = () => {
 
   const handleClose = () => {
     if (dontShowAgain) {
-      localStorage.setItem("hideSharePopup", "true");
+      localStorage.setItem('hideSharePopup', 'true');
     }
     setShowPopup(false);
   };
@@ -58,9 +55,9 @@ const SharePopup = () => {
           💙 Thanks for using AirDelivery!
         </h3>
         <p className="text-sm text-gray-700 mb-4">
-          We don’t ask for anything — just share AirDelivery with your friends
-          to support us and help us grow. Running this site costs money, but
-          your support and feedback keeps it alive and helps us bring more features.
+          We don’t ask for anything — just share AirDelivery with your friends to support us and
+          help us grow. Running this site costs money, but your support and feedback keeps it alive
+          and helps us bring more features.
         </p>
 
         <div
@@ -84,22 +81,58 @@ const SharePopup = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex gap-1 text-lg">
             <a href={links.whatsapp} target="_blank" rel="noopener noreferrer" title="WhatsApp">
-              <img className="w-8 h-8" width="240" height="240" src="https://img.icons8.com/color/240/whatsapp--v1.png" alt="whatsapp--v1"/>
+              <img
+                className="w-8 h-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/color/240/whatsapp--v1.png"
+                alt="whatsapp--v1"
+              />
             </a>
             <a href={links.twitter} target="_blank" rel="noopener noreferrer" title="Twitter">
-              <img  className="h-8 w-8" width="240" height="240" src="https://img.icons8.com/color/240/twitterx--v1.png" alt="twitterx--v1"/>
+              <img
+                className="h-8 w-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/color/240/twitterx--v1.png"
+                alt="twitterx--v1"
+              />
             </a>
             <a href={links.instagram} target="_blank" rel="noopener noreferrer" title="Facebook">
-                <img className="w-8 h-8" width="240" height="240" src="https://img.icons8.com/fluency/240/instagram-new.png" alt="instagram-new"/>
+              <img
+                className="w-8 h-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/fluency/240/instagram-new.png"
+                alt="instagram-new"
+              />
             </a>
             <a href={links.facebook} target="_blank" rel="noopener noreferrer" title="Facebook">
-              <img  className="w-8 h-8" width="240" height="240" src="https://img.icons8.com/color/240/facebook-new.png" alt="facebook-new"/>
+              <img
+                className="w-8 h-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/color/240/facebook-new.png"
+                alt="facebook-new"
+              />
             </a>
             <a href={links.linkedin} target="_blank" rel="noopener noreferrer" title="LinkedIn">
-              <img className="h-8 w-8" width="240" height="240" src="https://img.icons8.com/color/240/linkedin.png" alt="linkedin"/>
+              <img
+                className="h-8 w-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/color/240/linkedin.png"
+                alt="linkedin"
+              />
             </a>
             <a href={links.telegram} target="_blank" rel="noopener noreferrer" title="Telegram">
-              <img className="h-8 w-8" width="240" height="240" src="https://img.icons8.com/color/240/telegram-app--v1.png" alt="telegram-app--v1"/>
+              <img
+                className="h-8 w-8"
+                width="240"
+                height="240"
+                src="https://img.icons8.com/color/240/telegram-app--v1.png"
+                alt="telegram-app--v1"
+              />
             </a>
           </div>
 

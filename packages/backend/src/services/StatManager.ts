@@ -1,5 +1,5 @@
-import { Stat } from "../model/stats.model.js";
-import logger from "../utils/logger.js";
+import { Stat } from '../model/stats.model.js';
+import logger from '../utils/logger.js';
 
 export class StatManager {
   private buffer = {
@@ -23,9 +23,11 @@ export class StatManager {
   }
 
   async flush() {
-    if (this.buffer.totalFlights === 0 && 
-        this.buffer.totalFilesShared === 0 && 
-        this.buffer.totalMBTransferred === 0) {
+    if (
+      this.buffer.totalFlights === 0 &&
+      this.buffer.totalFilesShared === 0 &&
+      this.buffer.totalMBTransferred === 0
+    ) {
       return;
     }
 
@@ -44,12 +46,12 @@ export class StatManager {
               totalMBTransferred: update.totalMBTransferred,
             },
           },
-          { upsert: true }
+          { upsert: true },
         ).exec();
-        logger.debug("StatManager", "Stats flushed to DB", update);
+        logger.debug('StatManager', 'Stats flushed to DB', update);
       }
     } catch (error) {
-      logger.error("StatManager", "Failed to flush stats", { error, update });
+      logger.error('StatManager', 'Failed to flush stats', { error, update });
       // Restore buffer on failure? (Maybe not for stats to avoid infinite loop)
     }
   }

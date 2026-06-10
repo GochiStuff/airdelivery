@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import Feedback from "../model/feedback.model.js";
-import { ResponseHandler } from "../utils/ResponseHandler.js";
-import { z } from "zod";
+import { Request, Response } from 'express';
+import Feedback from '../model/feedback.model.js';
+import { ResponseHandler } from '../utils/ResponseHandler.js';
+import { z } from 'zod';
 
 const FeedbackSchema = z.object({
   name: z.string().min(2),
@@ -13,9 +13,9 @@ const FeedbackSchema = z.object({
 export const submitFeedback = async (req: Request, res: Response) => {
   try {
     const result = FeedbackSchema.safeParse(req.body);
-    
+
     if (!result.success) {
-      return ResponseHandler.error(res, "Validation failed", result.error.format(), 400);
+      return ResponseHandler.error(res, 'Validation failed', result.error.format(), 400);
     }
 
     const feedback = new Feedback(result.data);
@@ -23,7 +23,7 @@ export const submitFeedback = async (req: Request, res: Response) => {
 
     return ResponseHandler.success(res, null, "Thanks! We've received your feedback.", 201);
   } catch (error) {
-    console.error("Feedback submission error:", error);
-    return ResponseHandler.error(res, "Something went wrong. Please try again later.");
+    console.error('Feedback submission error:', error);
+    return ResponseHandler.error(res, 'Something went wrong. Please try again later.');
   }
 };

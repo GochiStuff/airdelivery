@@ -1,34 +1,27 @@
-"use client";
+'use client';
 
-import { useState, useRef, ChangeEvent, useEffect, useCallback } from "react";
-import PQueue from "p-queue";
-import pRetry from "p-retry";
+import { useState, useRef, ChangeEvent, useEffect, useCallback } from 'react';
+import PQueue from 'p-queue';
+import pRetry from 'p-retry';
 // @ts-ignore
 import * as lz4 from 'lz4js';
-import { flattenFileList } from "@/utils/flattenFilelist";
-import { v4 } from "uuid";
-import { generateThumbnail } from "@/lib/generateThumbnail";
-import { zipFiles } from "@/utils/compress";
+import { flattenFileList } from '@/utils/flattenFilelist';
+import { v4 } from 'uuid';
+import { generateThumbnail } from '@/lib/generateThumbnail';
+import { zipFiles } from '@/utils/compress';
 
-import { addToHistory } from "@/lib/history";
+import { addToHistory } from '@/lib/history';
 
 // ----------------------------- Types -----------------------------------
 
-type TransferStatus =
-  | "queued"
-  | "sending"
-  | "paused"
-  | "done"
-  | "error"
-  | "canceled"
-  | "receiving";
+type TransferStatus = 'queued' | 'sending' | 'paused' | 'done' | 'error' | 'canceled' | 'receiving';
 
 type Transfer = {
   file: File;
   transferId: string;
   directoryPath: string;
   progress: number;
-  type?: "send" | "receive";
+  type?: 'send' | 'receive';
   speedBps: number;
   status: TransferStatus;
   thumbnail?: string;
@@ -41,7 +34,7 @@ type RecvTransfer = {
   received: number;
   progress: number;
   blobUrl?: string;
-  type: "send" | "receive";
+  type: 'send' | 'receive';
   downloaded?: boolean;
   status: TransferStatus;
   thumbnail?: string;
@@ -56,7 +49,7 @@ type Meta = {
 export function useFileTransfer(
   dataChannel: RTCDataChannel | null,
   disconnect: () => void,
-  updateStats: (files: number, transfer: number) => void
+  updateStats: (files: number, transfer: number) => void,
 ) {
   const [queue, setQueue] = useState<Transfer[]>([]);
   const [recvQueue, setRecvQueue] = useState<RecvTransfer[]>([]);
@@ -69,11 +62,23 @@ export function useFileTransfer(
   // --- Constants / tuning  ( MOST OF THESE WERE SET AFTER BENCHMARKING DIFF SETTINGS ) ---------------------------------------------
   const MAX_RAM_SIZE = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
   const peerMax = (dataChannel as any)?.maxMessageSize || 0;
-  const CHUNK_SIZE = peerMax > 0 
-    ? Math.min(256 * 1024, Math.floor(peerMax * 0.9)) 
-    : 256 * 1024;
-  const BUFFER_THRESHOLD = 4 * 1024 * 1024; // 4MB - safe limit for Chrome's 16MB buffer
+  const CHUNK_SIZE = peerMax > 0 ? Math.min(64 * 1024, Math.floor(peerMax * 0.9)) : 64 * 1024;
+  const BUFFER_THRESHOLD = 2 * 1024 * 1024; // 2MB - safe limit for most browsers
   const PROGRESS_INTERVAL_MS = 500;
+
+  const safeSend = useCallback((channel: RTCDataChannel | null, data: string | ArrayBuffer) => {
+    if (!channel || channel.readyState !== 'open') {
+      throw new Error('Connection closed');
+    }
+    try {
+      channel.send(data as any);
+    } catch (err: any) {
+      if (err.name === 'InvalidStateError' || err.name === 'NetworkError') {
+        throw new Error('Connection closed');
+      }
+      throw err;
+    }
+  }, []);
 
   // We store partial incoming transfers here to avoid re-rendering on each chunk
   const incoming = useRef<
@@ -110,27 +115,23 @@ export function useFileTransfer(
   >({});
 
   const statusMap: Record<TransferStatus, string> = {
-    queued: "Waiting to send",
-    sending: "Transferring",
-    paused: "Paused",
-    done: "Completed",
-    error: "Failed",
-    canceled: "Canceled",
-    receiving: "Receiving",
+    queued: 'Waiting to send',
+    sending: 'Transferring',
+    paused: 'Paused',
+    done: 'Completed',
+    error: 'Failed',
+    canceled: 'Canceled',
+    receiving: 'Receiving',
   };
 
   // ------------------------- Download helpers ---------------------------
 
-  function downloadFile(file: {
-    transferId: string;
-    blobUrl: string;
-    directoryPath: string;
-  }) {
-    const a = document.createElement("a");
+  function downloadFile(file: { transferId: string; blobUrl: string; directoryPath: string }) {
+    const a = document.createElement('a');
 
     a.href = file.blobUrl;
     a.download = file.directoryPath;
-    a.style.display = "none";
+    a.style.display = 'none';
     document.body.appendChild(a);
 
     requestAnimationFrame(() => {
@@ -142,21 +143,19 @@ export function useFileTransfer(
       URL.revokeObjectURL(file.blobUrl);
 
       setRecvQueue((prev) =>
-        prev.map((f) =>
-          f.transferId === file.transferId ? { ...f, downloaded: true } : f
-        )
+        prev.map((f) => (f.transferId === file.transferId ? { ...f, downloaded: true } : f)),
       );
     }, 2000);
   }
 
   function openFile(blobUrl: string) {
-    window.open(blobUrl, "_blank", "noopener,noreferrer");
+    window.open(blobUrl, '_blank', 'noopener,noreferrer');
   }
 
   async function downloadAll() {
     for (const file of recvQueue) {
-      if (file.status === "done" && file.blobUrl && !file.downloaded) {
-        const a = document.createElement("a");
+      if (file.status === 'done' && file.blobUrl && !file.downloaded) {
+        const a = document.createElement('a');
         a.href = file.blobUrl;
         a.download = file.directoryPath;
         document.body.appendChild(a);
@@ -171,7 +170,7 @@ export function useFileTransfer(
   const [autoDownload, setAutoDownload] = useState(false);
   function tryAutoDownload(url: string, filename: string) {
     if (autoDownload) {
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
@@ -183,62 +182,72 @@ export function useFileTransfer(
     }
   }
 
-  const handleFileSelect = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files) return;
-      let files = await flattenFileList(e.target.files);
-      if (files.length === 0) return;
+  const handleFileSelect = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    let files = await flattenFileList(e.target.files);
+    if (files.length === 0) return;
 
-      const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+    const totalSize = files.reduce((acc, f) => acc + f.size, 0);
 
-      // Next-level Folder Preservation: Zip multiple files automatically if size is reasonable
-      if (files.length > 1 && totalSize < 500 * 1024 * 1024) {
-        try {
-          // Determine zip name from relative path or first file
-          const firstPath = (files[0] as any).webkitRelativePath;
-          const folderName = firstPath ? firstPath.split("/")[0] : "archive";
-          
-          const zippedFile = await zipFiles(files, folderName);
-          files = [zippedFile];
-        } catch (err) {
-          console.error("Zipping failed, falling back to individual files", err);
-        }
+    // Next-level Folder Preservation: Zip multiple files automatically if size is reasonable
+    if (files.length > 1 && totalSize < 500 * 1024 * 1024) {
+      try {
+        // Determine zip name from relative path or first file
+        const firstPath = (files[0] as any).webkitRelativePath;
+        const folderName = firstPath ? firstPath.split('/')[0] : 'archive';
+
+        const zippedFile = await zipFiles(files, folderName);
+        files = [zippedFile];
+      } catch (err) {
+        console.error('Zipping failed, falling back to individual files', err);
       }
+    }
 
-      const transfers = await Promise.all(
-        files.map(async (file) => {
-          const id = v4();
-          const thumb = await generateThumbnail(file);
-          transferControls.current[id] = { paused: false, canceled: false };
-          return {
-            file,
-            transferId: id,
-            directoryPath: (file as any).webkitRelativePath || file.name,
-            progress: 0,
-            speedBps: 0,
-            status: "queued" as const,
-            thumbnail: thumb,
-          };
-        })
-      );
+    const transfers = await Promise.all(
+      files.map(async (file) => {
+        const id = v4();
+        const thumb = await generateThumbnail(file);
+        transferControls.current[id] = { paused: false, canceled: false };
+        return {
+          file,
+          transferId: id,
+          directoryPath: (file as any).webkitRelativePath || file.name,
+          progress: 0,
+          speedBps: 0,
+          status: 'queued' as const,
+          thumbnail: thumb,
+        };
+      }),
+    );
 
-      // Avoid duplicates by directoryPath
-      setQueue((prev) => {
-        const existing = new Set(prev.map((t) => t.directoryPath));
-        return [...prev, ...transfers.filter((t) => !existing.has(t.directoryPath))];
-      });
-    },
-    []
-  );
-
+    // Avoid duplicates by directoryPath
+    setQueue((prev) => {
+      const existing = new Set(prev.map((t) => t.directoryPath));
+      return [...prev, ...transfers.filter((t) => !existing.has(t.directoryPath))];
+    });
+  }, []);
 
   const COMPRESSED_EXTS = new Set([
-    "zip", "rar", "7z", "gz", "mp4", "mkv", "mov", "avi", "jpg", "jpeg", "png", "webp", "pdf", "mp3", "wav"
+    'zip',
+    'rar',
+    '7z',
+    'gz',
+    'mp4',
+    'mkv',
+    'mov',
+    'avi',
+    'jpg',
+    'jpeg',
+    'png',
+    'webp',
+    'pdf',
+    'mp3',
+    'wav',
   ]);
 
   function shouldCompress(fileName: string): boolean {
-    const ext = fileName.split(".").pop()?.toLowerCase();
-    return !COMPRESSED_EXTS.has(ext || "");
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    return !COMPRESSED_EXTS.has(ext || '');
   }
 
   // [transferIdLength][transferId][chunkSize][isCompressed][chunk]
@@ -270,12 +279,12 @@ export function useFileTransfer(
   const sendFile = useCallback(
     async ({ file, transferId, directoryPath, thumbnail }: Transfer) => {
       // Ensure data channel is available and open
-      if (!dataChannel) throw new Error("No dataChannel");
-      if (dataChannel.readyState !== "open")
-        throw new Error("Connection is not open");
+      if (!dataChannel || dataChannel.readyState !== 'open') {
+        throw new Error('Connection closed');
+      }
 
       const controls = transferControls.current[transferId];
-      if (!controls) throw new Error("No controls for transfer");
+      if (!controls) throw new Error('No controls for transfer');
 
       const total = file.size;
       let sent = 0;
@@ -284,49 +293,58 @@ export function useFileTransfer(
 
       const compress = shouldCompress(file.name);
 
-      if (dataChannel.readyState !== "open") throw new Error("Connection closed before init");
-
       // JSON messages count towards maxMessageSize too.
       // If thumbnail is still too big, we omit it to save the connection.
-      const initMsg = JSON.stringify({ type: "init", transferId, directoryPath, size: total, thumbnail });
-      if (peerMax > 0 && initMsg.length > peerMax) {
-        dataChannel.send(JSON.stringify({ type: "init", transferId, directoryPath, size: total }));
+      const initMsg = JSON.stringify({
+        type: 'init',
+        transferId,
+        directoryPath,
+        size: total,
+        thumbnail,
+      });
+      const initByteLen = new TextEncoder().encode(initMsg).length;
+
+      if (peerMax > 0 && initByteLen > peerMax) {
+        safeSend(
+          dataChannel,
+          JSON.stringify({ type: 'init', transferId, directoryPath, size: total }),
+        );
       } else {
-        dataChannel.send(initMsg);
+        safeSend(dataChannel, initMsg);
       }
 
       let offset = 0;
       while (offset < total) {
+        // Yield control to let the browser process network/UI tasks
+        await new Promise((res) => setTimeout(res, 0));
         if (controls.canceled) {
-          if (dataChannel.readyState === "open") {
-            dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
-          }
+          try {
+            safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+          } catch {}
           setQueue((q) =>
-            q.map((x) =>
-              x.transferId === transferId ? { ...x, status: "canceled" } : x
-            )
+            q.map((x) => (x.transferId === transferId ? { ...x, status: 'canceled' } : x)),
           );
           addToHistory({
             id: transferId,
             name: directoryPath,
             size: total,
-            type: "send",
-            status: "canceled",
+            type: 'send',
+            status: 'canceled',
             thumbnail,
           });
-          throw new Error("Canceled");
+          throw new Error('Canceled');
         }
         if (controls.paused) {
-          if (dataChannel.readyState === "open") {
-            dataChannel.send(JSON.stringify({ type: "pause", transferId }));
-          }
+          try {
+            safeSend(dataChannel, JSON.stringify({ type: 'pause', transferId }));
+          } catch {}
           await controls.resumePromise;
-          if (dataChannel.readyState === "open") {
-            dataChannel.send(JSON.stringify({ type: "resume", transferId }));
-          }
+          try {
+            safeSend(dataChannel, JSON.stringify({ type: 'resume', transferId }));
+          } catch {}
         }
 
-        // Robust Backpressure 
+        // Robust Backpressure
         if (dataChannel.bufferedAmount > BUFFER_THRESHOLD) {
           await new Promise<void>((res) => {
             const timeout = setTimeout(res, 100); // Fallback timeout
@@ -339,9 +357,8 @@ export function useFileTransfer(
             dataChannel.onbufferedamountlow = listener;
           });
         }
-        
-        if (dataChannel.readyState !== "open")
-          throw new Error("Connection closed");
+
+        if (dataChannel.readyState !== 'open') throw new Error('Connection closed');
 
         const chunkBlob = file.slice(offset, offset + CHUNK_SIZE);
         const chunkBuffer = await chunkBlob.arrayBuffer();
@@ -359,14 +376,14 @@ export function useFileTransfer(
         }
 
         const packet = createPacket(transferId, finalData, isCompressed);
-        
+
         try {
-          dataChannel.send(packet);
+          safeSend(dataChannel, packet);
         } catch (err: any) {
-          if (err.name === "OperationError") {
+          if (err.name === 'OperationError') {
             // Buffer actually full, wait more
             await new Promise((res) => setTimeout(res, 200));
-            dataChannel.send(packet); // Retry once
+            safeSend(dataChannel, packet); // Retry once
           } else {
             throw err;
           }
@@ -377,21 +394,13 @@ export function useFileTransfer(
         offset += chunk.length;
         const now = Date.now();
         const pct = (sent / total) * 100;
-        if (
-          now - lastTime > PROGRESS_INTERVAL_MS ||
-          pct - (lastSent / total) * 100 >= 5
-        ) {
+        if (now - lastTime > PROGRESS_INTERVAL_MS || pct - (lastSent / total) * 100 >= 5) {
           setQueue((q) =>
-            q.map((x) =>
-              x.transferId === transferId
-                ? { ...x, progress: Math.round(pct) }
-                : x
-            )
+            q.map((x) => (x.transferId === transferId ? { ...x, progress: Math.round(pct) } : x)),
           );
           const bytesSinceLast = sent - lastSent;
           const timeElapsedSec = (now - lastTime) / 1000;
-          const speed =
-            timeElapsedSec > 0 ? Math.round(bytesSinceLast / timeElapsedSec) : 0;
+          const speed = timeElapsedSec > 0 ? Math.round(bytesSinceLast / timeElapsedSec) : 0;
           setMeta((m) => ({ ...m, speedBps: speed }));
           lastTime = now;
           lastSent = sent;
@@ -399,27 +408,24 @@ export function useFileTransfer(
       }
 
       // Signal completion and update queues/meta
-      if (dataChannel.readyState === "open") {
-        dataChannel.send(JSON.stringify({ type: "done", transferId }));
-      }
+      try {
+        safeSend(dataChannel, JSON.stringify({ type: 'done', transferId }));
+      } catch {}
+
       setQueue((q) =>
-        q.map((x) =>
-          x.transferId === transferId
-            ? { ...x, progress: 100, status: "done" }
-            : x
-        )
+        q.map((x) => (x.transferId === transferId ? { ...x, progress: 100, status: 'done' } : x)),
       );
       setMeta((m) => ({ ...m, totalSent: m.totalSent + total }));
       addToHistory({
         id: transferId,
         name: directoryPath,
         size: total,
-        type: "send",
-        status: "done",
+        type: 'send',
+        status: 'done',
         thumbnail,
       });
     },
-    [dataChannel]
+    [dataChannel, safeSend],
   );
 
   // ------------------------- RECEIVE  ---------------------------
@@ -430,9 +436,7 @@ export function useFileTransfer(
     const transferIdLength = view.getUint32(offset);
     offset += 4;
 
-    const transferId = new TextDecoder().decode(
-      new Uint8Array(buffer, offset, transferIdLength)
-    );
+    const transferId = new TextDecoder().decode(new Uint8Array(buffer, offset, transferIdLength));
 
     offset += transferIdLength;
 
@@ -452,7 +456,7 @@ export function useFileTransfer(
     const rec = incoming.current[transferId];
 
     if (!rec) {
-      console.warn("No matching incoming entry for:", transferId);
+      console.warn('No matching incoming entry for:', transferId);
       currentReceivingIdRef.current = null;
       return;
     }
@@ -473,35 +477,33 @@ export function useFileTransfer(
           ) {
             setRecvQueue((rq) =>
               rq.map((r) =>
-                r.transferId === transferId && r.status === "receiving"
+                r.transferId === transferId && r.status === 'receiving'
                   ? {
                       ...r,
                       received: rec.received,
                       progress: Math.round((rec.received / rec.size) * 100),
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
             rec.lastProgressUpdate = Date.now();
           }
         } catch (err) {
-          console.error("Writer error:", err);
+          console.error('Writer error:', err);
           try {
             if (!rec.writer) return;
             await rec.writer.abort?.();
           } catch {}
           delete incoming.current[transferId];
           setRecvQueue((rq) =>
-            rq.map((r) =>
-              r.transferId === transferId ? { ...r, status: "error" } : r
-            )
+            rq.map((r) => (r.transferId === transferId ? { ...r, status: 'error' } : r)),
           );
           addToHistory({
             id: transferId,
-            name: rec.directoryPath || "Unknown File", // Wait, rec doesn't have directoryPath in its type but it's used?
+            name: rec.directoryPath || 'Unknown File', // Wait, rec doesn't have directoryPath in its type but it's used?
             size: rec.size,
-            type: "receive",
-            status: "error",
+            type: 'receive',
+            status: 'error',
           });
           return;
         }
@@ -526,18 +528,16 @@ export function useFileTransfer(
 
         setRecvQueue((rq) =>
           rq.map((r) =>
-            r.transferId === transferId
-              ? { ...r, status: "done", progress: 100 }
-              : r
-          )
+            r.transferId === transferId ? { ...r, status: 'done', progress: 100 } : r,
+          ),
         );
 
         addToHistory({
           id: transferId,
           name: rec.directoryPath,
           size: rec.size,
-          type: "receive",
-          status: "done",
+          type: 'receive',
+          status: 'done',
           thumbnail: rec.thumbnail,
         });
 
@@ -548,204 +548,193 @@ export function useFileTransfer(
     }
   }
 
-  const handleMessage = useCallback(
-    async (event: MessageEvent) => {
-      if (typeof event.data === "string") {
-        let msg: any;
+  const handleMessage = useCallback(async (event: MessageEvent) => {
+    if (typeof event.data === 'string') {
+      let msg: any;
+      try {
+        msg = JSON.parse(event.data);
+      } catch {
+        console.warn('Received string but not JSON:', event.data);
+        return;
+      }
+      const { type, transferId, directoryPath, size, thumbnail } = msg;
+
+      if (type === 'chunk') {
+        currentReceivingIdRef.current = transferId;
+        return;
+      }
+
+      // INIT message: prepare writer and metadata for incoming transfer
+      if (type === 'init') {
         try {
-          msg = JSON.parse(event.data);
-        } catch {
-          console.warn("Received string but not JSON:", event.data);
-          return;
-        }
-        const { type, transferId, directoryPath, size, thumbnail } = msg;
+          let writer: WritableStreamDefaultWriter;
+          let chunks: Uint8Array[] | undefined = undefined;
+          let downloaded = false;
 
-        if (type === "chunk") {
-          currentReceivingIdRef.current = transferId;
-          return;
-        }
-
-        // INIT message: prepare writer and metadata for incoming transfer
-        if (type === "init") {
-          try {
-            let writer: WritableStreamDefaultWriter;
-            let chunks: Uint8Array[] | undefined = undefined;
-            let downloaded = false;
-
-            if (size < MAX_RAM_SIZE) {
-              // Small file: buffer in-memory and produce a blob at the end
-              chunks = [];
-              writer = {
-                write: (chunk: Uint8Array) => {
-                  chunks!.push(chunk);
-                  return Promise.resolve();
-                },
-                close: () => {
-                  const totalLength = chunks!.reduce((sum, c) => sum + c.length, 0);
-                  const all = new Uint8Array(totalLength);
-                  let offset = 0;
-                  for (const c of chunks!) {
-                    all.set(c, offset);
-                    offset += c.length;
-                  }
-
-                  const blob = new Blob([all]);
-                  const url = URL.createObjectURL(blob);
-                  setRecvQueue((rq) =>
-                    rq.map((r) =>
-                      r.transferId === transferId ? { ...r, blobUrl: url } : r
-                    )
-                  );
-
-                  tryAutoDownload(url, directoryPath);
-
-                  if (chunks?.length) chunks.length = 0;
-
-                  return Promise.resolve();
-                },
-                abort: () => {
-                  chunks = undefined;
-                  return Promise.resolve();
-                },
-                // Minimal stubs to satisfy WritableStreamDefaultWriter shape
-                get closed() {
-                  return Promise.resolve();
-                },
-                get desiredSize() {
-                  return null;
-                },
-                get ready() {
-                  return Promise.resolve();
-                },
-                releaseLock: () => {},
-              } as WritableStreamDefaultWriter<any>;
-            } else {
-              // Large file: stream to disk using streamsaver
-              const streamSaver = (await import("streamsaver")).default;
-              const stream = streamSaver.createWriteStream(directoryPath, {
-                size,
-              });
-
-              downloaded = true;
-              writer = stream.getWriter();
-            }
-
-            incoming.current[transferId] = {
-              writer,
-              queue: [],
-              writing: false,
-              size,
-              received: 0,
-              lastProgressUpdate: 0,
-              directoryPath,
-              thumbnail,
-            };
-
-            setRecvQueue((rq) => [
-              ...rq,
-              {
-                transferId,
-                directoryPath,
-                blobUrl: "",
-                size,
-                type: "receive",
-                downloaded,
-                received: 0,
-                progress: 0,
-                status: "receiving",
-                thumbnail,
+          if (size < MAX_RAM_SIZE) {
+            // Small file: buffer in-memory and produce a blob at the end
+            chunks = [];
+            writer = {
+              write: (chunk: Uint8Array) => {
+                chunks!.push(chunk);
+                return Promise.resolve();
               },
-            ]);
-          } catch (err) {
-            console.error("Error creating write stream:", err);
-            setRecvQueue((rq) =>
-              rq.map((r) =>
-                r.transferId === transferId ? { ...r, status: "error" } : r
-              )
-            );
-          }
-          return;
-        }
+              close: () => {
+                const totalLength = chunks!.reduce((sum, c) => sum + c.length, 0);
+                const all = new Uint8Array(totalLength);
+                let offset = 0;
+                for (const c of chunks!) {
+                  all.set(c, offset);
+                  offset += c.length;
+                }
 
-        // CONTROL messages (pause/resume/cancel)
-        if (type === "pause") {
-          setRecvQueue((rq) =>
-            rq.map((r) =>
-              r.transferId === transferId && r.status === "receiving"
-                ? { ...r, status: "paused" }
-                : r
-            )
-          );
-          return;
-        }
-        if (type === "resume") {
-          setRecvQueue((rq) =>
-            rq.map((r) =>
-              r.transferId === transferId && r.status === "paused"
-                ? { ...r, status: "receiving" }
-                : r
-            )
-          );
-          return;
-        }
-        if (type === "cancel") {
-          // Cancel an incoming transfer
-          if (incoming.current[transferId]) {
-            try {
-              if (!incoming.current[transferId].writer) return;
-              incoming.current[transferId].writer.abort();
-            } catch {}
-            delete incoming.current[transferId];
-            setRecvQueue((rq) =>
-              rq.map((r) =>
-                r.transferId === transferId ? { ...r, status: "canceled" } : r
-              )
-            );
-            return;
-          }
-          // Or remote cancelled our outgoing send -> mark as canceled locally
-          if (transferControls.current[transferId]) {
-            const controls = transferControls.current[transferId];
-            controls.canceled = true;
-            if (controls.paused && controls.resumeResolve) {
-              controls.paused = false;
-              controls.resumeResolve();
-            }
-            setQueue((q) =>
-              q.map((x) =>
-                x.transferId === transferId ? { ...x, status: "canceled" } : x
-              )
-            );
-          }
-          return;
-        }
+                const blob = new Blob([all]);
+                const url = URL.createObjectURL(blob);
+                setRecvQueue((rq) =>
+                  rq.map((r) => (r.transferId === transferId ? { ...r, blobUrl: url } : r)),
+                );
 
-        // DONE (no-op here, writer close handled in ProcessRecQue)
-        if (type === "done") {
-          return;
+                tryAutoDownload(url, directoryPath);
+
+                if (chunks?.length) chunks.length = 0;
+
+                return Promise.resolve();
+              },
+              abort: () => {
+                chunks = undefined;
+                return Promise.resolve();
+              },
+              // Minimal stubs to satisfy WritableStreamDefaultWriter shape
+              get closed() {
+                return Promise.resolve();
+              },
+              get desiredSize() {
+                return null;
+              },
+              get ready() {
+                return Promise.resolve();
+              },
+              releaseLock: () => {},
+            } as WritableStreamDefaultWriter<any>;
+          } else {
+            // Large file: stream to disk using streamsaver
+            const streamSaver = (await import('streamsaver')).default;
+            const stream = streamSaver.createWriteStream(directoryPath, {
+              size,
+            });
+
+            downloaded = true;
+            writer = stream.getWriter();
+          }
+
+          incoming.current[transferId] = {
+            writer,
+            queue: [],
+            writing: false,
+            size,
+            received: 0,
+            lastProgressUpdate: 0,
+            directoryPath,
+            thumbnail,
+          };
+
+          setRecvQueue((rq) => [
+            ...rq,
+            {
+              transferId,
+              directoryPath,
+              blobUrl: '',
+              size,
+              type: 'receive',
+              downloaded,
+              received: 0,
+              progress: 0,
+              status: 'receiving',
+              thumbnail,
+            },
+          ]);
+        } catch (err) {
+          console.error('Error creating write stream:', err);
+          setRecvQueue((rq) =>
+            rq.map((r) => (r.transferId === transferId ? { ...r, status: 'error' } : r)),
+          );
         }
         return;
       }
 
-      // ----------------- Binary data path -----------------
-      const { transferId, chunk, isCompressed } = unpack(event.data);
-
-      const rec = incoming.current[transferId];
-      if (!rec) return;
-
-      // Decompress only if the sender flagged it as compressed
-      const decompressed = isCompressed 
-        ? lz4.decompress(new Uint8Array(chunk))
-        : new Uint8Array(chunk);
-
-      rec.queue.push(decompressed.buffer);
-      if (!rec.writing) {
-        rec.writing = true;
-        ProcessRecQue(transferId);
+      // CONTROL messages (pause/resume/cancel)
+      if (type === 'pause') {
+        setRecvQueue((rq) =>
+          rq.map((r) =>
+            r.transferId === transferId && r.status === 'receiving'
+              ? { ...r, status: 'paused' }
+              : r,
+          ),
+        );
+        return;
       }
-    },
-    []
-  );
+      if (type === 'resume') {
+        setRecvQueue((rq) =>
+          rq.map((r) =>
+            r.transferId === transferId && r.status === 'paused'
+              ? { ...r, status: 'receiving' }
+              : r,
+          ),
+        );
+        return;
+      }
+      if (type === 'cancel') {
+        // Cancel an incoming transfer
+        if (incoming.current[transferId]) {
+          try {
+            if (!incoming.current[transferId].writer) return;
+            incoming.current[transferId].writer.abort();
+          } catch {}
+          delete incoming.current[transferId];
+          setRecvQueue((rq) =>
+            rq.map((r) => (r.transferId === transferId ? { ...r, status: 'canceled' } : r)),
+          );
+          return;
+        }
+        // Or remote cancelled our outgoing send -> mark as canceled locally
+        if (transferControls.current[transferId]) {
+          const controls = transferControls.current[transferId];
+          controls.canceled = true;
+          if (controls.paused && controls.resumeResolve) {
+            controls.paused = false;
+            controls.resumeResolve();
+          }
+          setQueue((q) =>
+            q.map((x) => (x.transferId === transferId ? { ...x, status: 'canceled' } : x)),
+          );
+        }
+        return;
+      }
+
+      // DONE (no-op here, writer close handled in ProcessRecQue)
+      if (type === 'done') {
+        return;
+      }
+      return;
+    }
+
+    // ----------------- Binary data path -----------------
+    const { transferId, chunk, isCompressed } = unpack(event.data);
+
+    const rec = incoming.current[transferId];
+    if (!rec) return;
+
+    // Decompress only if the sender flagged it as compressed
+    const decompressed = isCompressed
+      ? lz4.decompress(new Uint8Array(chunk))
+      : new Uint8Array(chunk);
+
+    rec.queue.push(decompressed.buffer);
+    if (!rec.writing) {
+      rec.writing = true;
+      ProcessRecQue(transferId);
+    }
+  }, []);
 
   // ------------------------- Reset / cancel ----------------------------
   function resetTransfer() {
@@ -774,7 +763,7 @@ export function useFileTransfer(
   // ------------------------- Setup handlers ----------------------------
   useEffect(() => {
     if (!dataChannel) return;
-    dataChannel.binaryType = "arraybuffer";
+    dataChannel.binaryType = 'arraybuffer';
     dataChannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD;
     dataChannel.onmessage = handleMessage;
     dataChannel.onopen = () => {};
@@ -782,12 +771,12 @@ export function useFileTransfer(
       // Mark all sending transfers as paused and call disconnect
       setQueue((q) =>
         q.map((t) => {
-          if (t.status === "sending") {
+          if (t.status === 'sending') {
             transferControls.current[t.transferId].paused = true;
-            return { ...t, status: "paused" as const };
+            return { ...t, status: 'paused' as const };
           }
           return t;
-        })
+        }),
       );
 
       disconnect();
@@ -809,39 +798,34 @@ export function useFileTransfer(
 
   // ----------------------- SENDING QUEUE runner -------------------------
   useEffect(() => {
-    if (!dataChannel || dataChannel.readyState !== "open") return;
+    if (!dataChannel || dataChannel.readyState !== 'open') return;
 
     queue.forEach((t) => {
-      if (t.status !== "queued" || enqueuedIds.current.has(t.transferId)) return;
+      if (t.status !== 'queued' || enqueuedIds.current.has(t.transferId)) return;
 
       enqueuedIds.current.add(t.transferId);
 
       // mark as sending and enqueue the send job
       setQueue((q) =>
-        q.map((x) =>
-          x.transferId === t.transferId ? { ...x, status: "sending" } : x
-        )
+        q.map((x) => (x.transferId === t.transferId ? { ...x, status: 'sending' } : x)),
       );
 
-      pq.current
-        .add(async () => {
-          try {
-            await pRetry(() => sendFile(t), { retries: 0 });
-          } catch (err: any) {
-            if (err.message === "Canceled") {
-              // already handled
-            } else {
-              console.error("Send failed for", t.transferId, err);
-              setQueue((q) =>
-                q.map((x) =>
-                  x.transferId === t.transferId ? { ...x, status: "error" } : x
-                )
-              );
-            }
-          } finally {
-            enqueuedIds.current.delete(t.transferId);
+      pq.current.add(async () => {
+        try {
+          await pRetry(() => sendFile(t), { retries: 0 });
+        } catch (err: any) {
+          if (err.message === 'Canceled') {
+            // already handled
+          } else {
+            console.error('Send failed for', t.transferId, err);
+            setQueue((q) =>
+              q.map((x) => (x.transferId === t.transferId ? { ...x, status: 'error' } : x)),
+            );
           }
-        })
+        } finally {
+          enqueuedIds.current.delete(t.transferId);
+        }
+      });
     });
   }, [queue, dataChannel, sendFile]);
 
@@ -852,14 +836,14 @@ export function useFileTransfer(
       setQueue((prev) => [...prev]);
     };
 
-    if (dataChannel.readyState === "open") {
+    if (dataChannel.readyState === 'open') {
       onOpen();
     }
 
-    dataChannel.addEventListener("open", onOpen);
+    dataChannel.addEventListener('open', onOpen);
 
     return () => {
-      dataChannel.removeEventListener("open", onOpen);
+      dataChannel.removeEventListener('open', onOpen);
     };
   }, [dataChannel]);
 
@@ -867,10 +851,7 @@ export function useFileTransfer(
   const pauseTransfer = useCallback((transferId: string) => {
     setQueue((q) =>
       q.map((x) => {
-        if (
-          x.transferId === transferId &&
-          (x.status === "sending" || x.status === "queued")
-        ) {
+        if (x.transferId === transferId && (x.status === 'sending' || x.status === 'queued')) {
           const controls = transferControls.current[transferId];
           if (controls) {
             controls.paused = true;
@@ -878,17 +859,17 @@ export function useFileTransfer(
               controls.resumeResolve = res;
             });
           }
-          return { ...x, status: "paused" };
+          return { ...x, status: 'paused' };
         }
         return x;
-      })
+      }),
     );
   }, []);
 
   const resumeTransfer = useCallback((transferId: string) => {
     setQueue((q) =>
       q.map((x) => {
-        if (x.transferId === transferId && x.status === "paused") {
+        if (x.transferId === transferId && x.status === 'paused') {
           const controls = transferControls.current[transferId];
           if (controls) {
             controls.paused = false;
@@ -896,11 +877,11 @@ export function useFileTransfer(
             controls.resumePromise = undefined;
             controls.resumeResolve = undefined;
           }
-          const nextStatus = x.progress > 0 ? "sending" : "queued";
+          const nextStatus = x.progress > 0 ? 'sending' : 'queued';
           return { ...x, status: nextStatus };
         }
         return x;
-      })
+      }),
     );
   }, []);
 
@@ -916,12 +897,12 @@ export function useFileTransfer(
         }
       }
       setQueue((q) =>
-        q.map((x) =>
-          x.transferId === transferId ? { ...x, status: "canceled" } : x
-        )
+        q.map((x) => (x.transferId === transferId ? { ...x, status: 'canceled' } : x)),
       );
-      if (dataChannel && dataChannel.readyState === "open") {
-        dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
+      if (dataChannel) {
+        try {
+          safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+        } catch {}
       }
 
       const item = queue.find((q) => q.transferId === transferId);
@@ -930,13 +911,13 @@ export function useFileTransfer(
           id: transferId,
           name: item.directoryPath,
           size: item.file.size,
-          type: "send",
-          status: "canceled",
+          type: 'send',
+          status: 'canceled',
           thumbnail: item.thumbnail,
         });
       }
     },
-    [dataChannel, queue]
+    [dataChannel, queue],
   );
 
   const cancelReceive = useCallback(
@@ -949,31 +930,31 @@ export function useFileTransfer(
             rec.writer.abort();
           } catch {}
         }
-        
+
         addToHistory({
           id: transferId,
           name: rec.directoryPath,
           size: rec.size,
-          type: "receive",
-          status: "canceled",
+          type: 'receive',
+          status: 'canceled',
           thumbnail: rec.thumbnail,
         });
 
         delete incoming.current[transferId];
       }
       setRecvQueue((rq) =>
-        rq.map((r) =>
-          r.transferId === transferId ? { ...r, status: "canceled" } : r
-        )
+        rq.map((r) => (r.transferId === transferId ? { ...r, status: 'canceled' } : r)),
       );
       if (currentReceivingIdRef.current === transferId) {
         currentReceivingIdRef.current = null;
       }
-      if (dataChannel && dataChannel.readyState === "open") {
-        dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
+      if (dataChannel) {
+        try {
+          safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+        } catch {}
       }
     },
-    [dataChannel]
+    [dataChannel, safeSend],
   );
 
   // STATUS view for consumers

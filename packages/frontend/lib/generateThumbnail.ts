@@ -5,16 +5,16 @@ export async function generateThumbnail(file: File): Promise<string> {
   const QUALITY = 0.6;
 
   // Use worker for images
-  if (type.startsWith("image/")) {
+  if (type.startsWith('image/')) {
     return new Promise((resolve) => {
-      const worker = new Worker("/thumbnail.worker.js");
+      const worker = new Worker('/thumbnail.worker.js');
       worker.onmessage = (e) => {
         if (e.data.thumb) resolve(e.data.thumb);
-        else resolve("");
+        else resolve('');
         worker.terminate();
       };
       worker.onerror = () => {
-        resolve("");
+        resolve('');
         worker.terminate();
       };
       worker.postMessage({ file, TARGET_W, TARGET_H, QUALITY });
@@ -22,14 +22,14 @@ export async function generateThumbnail(file: File): Promise<string> {
   }
 
   // Fallback to main thread for video (OffscreenCanvas lacks <video> support)
-  if (type.startsWith("video/")) {
+  if (type.startsWith('video/')) {
     return new Promise<string>((res, rej) => {
-      const video = document.createElement("video");
-      video.preload = "metadata";
+      const video = document.createElement('video');
+      video.preload = 'metadata';
       video.src = URL.createObjectURL(file);
       video.muted = true;
       video.playsInline = true;
-      video.currentTime = 1; 
+      video.currentTime = 1;
 
       const cleanup = () => {
         URL.revokeObjectURL(video.src);
@@ -44,24 +44,24 @@ export async function generateThumbnail(file: File): Promise<string> {
           const w = Math.round(videoWidth * ratio);
           const h = Math.round(videoHeight * ratio);
 
-          const canvas = document.createElement("canvas");
+          const canvas = document.createElement('canvas');
           canvas.width = w;
           canvas.height = h;
-          canvas.getContext("2d")!.drawImage(video, 0, 0, w, h);
-          const thumb = canvas.toDataURL("image/jpeg", QUALITY);
+          canvas.getContext('2d')!.drawImage(video, 0, 0, w, h);
+          const thumb = canvas.toDataURL('image/jpeg', QUALITY);
           cleanup();
           res(thumb);
         } catch (e) {
           cleanup();
-          res("");
+          res('');
         }
       };
       video.onerror = () => {
         cleanup();
-        res("");
+        res('');
       };
     });
   }
 
-  return "";
+  return '';
 }

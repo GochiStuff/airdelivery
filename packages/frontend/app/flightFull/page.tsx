@@ -1,17 +1,15 @@
-"use client";
-import { ArrowLeftCircle } from "lucide-react";
-import Link from "next/link";
+'use client';
+import { ArrowLeftCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function FlightFullPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-xl border border-orange-100 text-center">
-        
-        <h1 className="text-3xl font-extrabold text-orange-600 mb-4 tracking-tight">
-          Flight Full
-        </h1>
+        <h1 className="text-3xl font-extrabold text-orange-600 mb-4 tracking-tight">Flight Full</h1>
         <p className="text-zinc-600 text-base mb-6">
-          Sorry, you can't join this flight right now. Only 1-2 users are allowed per flight for now.
+          Sorry, you can't join this flight right now. Only 1-2 users are allowed per flight for
+          now.
         </p>
 
         <div className="text-sm text-zinc-500 italic mb-8">

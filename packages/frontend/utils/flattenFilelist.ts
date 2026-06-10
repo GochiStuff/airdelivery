@@ -1,14 +1,13 @@
 export async function flattenFileList(items: FileList | DataTransferItemList): Promise<File[]> {
   const files: File[] = [];
 
-
   async function traverseEntry(entry: any) {
     if (entry.isFile) {
-      const file: File = await new Promise(r => entry.file(r));
+      const file: File = await new Promise((r) => entry.file(r));
       files.push(file);
     } else if (entry.isDirectory) {
       const reader = entry.createReader();
-      const entries = await new Promise<any[]>(r => reader.readEntries(r));
+      const entries = await new Promise<any[]>((r) => reader.readEntries(r));
       for (const ent of entries) await traverseEntry(ent);
     }
   }

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Gauge } from "lucide-react";
+import { ArrowDown, ArrowUp, Gauge } from 'lucide-react';
 
 export function MetricsSection({ meta }: { meta: any }) {
   return (
@@ -53,7 +53,9 @@ function MetricCard({
         <span className="text-sm text-zinc-700 dark:text-zinc-400 font-medium">{label}</span>
         <div className={`p-2 rounded-full ${iconBg}`}>{icon}</div>
       </div>
-      <span className="text-xl sm:text-2xl text-nowrap font-semibold text-zinc-900 dark:text-zinc-100">{value}</span>
+      <span className="text-xl sm:text-2xl text-nowrap font-semibold text-zinc-900 dark:text-zinc-100">
+        {value}
+      </span>
     </div>
   );
 }

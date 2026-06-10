@@ -1,5 +1,5 @@
-import type { Server, Socket } from "socket.io";
-import logger from "../utils/logger.js";
+import type { Server, Socket } from 'socket.io';
+import logger from '../utils/logger.js';
 
 export interface User {
   id: string;
@@ -17,7 +17,7 @@ export class UserManager {
 
   addUser(socketId: string, userData: User) {
     this.users.set(socketId, userData);
-    
+
     if (userData.ipPrefix) {
       if (!this.usersByPrefix.has(userData.ipPrefix)) {
         this.usersByPrefix.set(userData.ipPrefix, new Set());
@@ -48,7 +48,8 @@ export class UserManager {
       // If prefix changed (rare but possible), update buckets
       if (updates.ipPrefix && updates.ipPrefix !== user.ipPrefix) {
         if (user.ipPrefix) this.usersByPrefix.get(user.ipPrefix)?.delete(socketId);
-        if (!this.usersByPrefix.has(updates.ipPrefix)) this.usersByPrefix.set(updates.ipPrefix, new Set());
+        if (!this.usersByPrefix.has(updates.ipPrefix))
+          this.usersByPrefix.set(updates.ipPrefix, new Set());
         this.usersByPrefix.get(updates.ipPrefix)!.add(socketId);
       }
       this.users.set(socketId, updatedUser);

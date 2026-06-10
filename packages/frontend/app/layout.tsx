@@ -1,147 +1,144 @@
-import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
-import { SocketProvider } from "@/context/socketContext";
-import Header from "@/components/header";
-import { Analytics } from "@vercel/analytics/next";
-import Script from "next/script";
-import FooterStrip from "@/components/footer";
-import Providers from "./providers";
+import type { Metadata } from 'next';
+import { Geist_Mono, Inter } from 'next/font/google';
+import './globals.css';
+import { SocketProvider } from '@/context/socketContext';
+import Header from '@/components/header';
+import { Analytics } from '@vercel/analytics/next';
+import Script from 'next/script';
+import FooterStrip from '@/components/footer';
+import Providers from './providers';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
+  variable: '--font-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
+  variable: '--font-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Air Delivery",
-    template: "%s | Secure & Instant P2P File Sharing",
+    default: 'Air Delivery',
+    template: '%s | Secure & Instant P2P File Sharing',
   },
   description:
-    "Air Delivery lets you send large files instantly and securely with peer-to-peer WebRTC. No uploads, no sign-up, no file size limits. Just fast, private browser-to-browser sharing.",
-  applicationName: "Air Delivery",
-  authors: [{ name: "Yash Jangid", url: "https://x.com/imgochi" }],
+    'Air Delivery lets you send large files instantly and securely with peer-to-peer WebRTC. No uploads, no sign-up, no file size limits. Just fast, private browser-to-browser sharing.',
+  applicationName: 'Air Delivery',
+  authors: [{ name: 'Yash Jangid', url: 'https://x.com/imgochi' }],
   keywords: [
-    "send large files",
-    "free file sharing",
-    "peer to peer file sharing",
-    "p2p file transfer",
-    "web based file sharing",
-    "no signup file transfer",
-    "encrypted file sharing",
-    "direct browser file sharing",
-    "large file transfer online",
-    "webrtc file transfer",
-    "instant file sharing",
-    "secure p2p file transfer",
-    "file sharing without upload",
-    "open source",
-    "airdrop alternative",
-    "sharedrop alternative",
-    "file transfer without cloud",
-    "anonymous file sharing",
-    "fast browser file transfer",
-    "p2p file transfer no limits",
-    "send files peer to peer",
+    'send large files',
+    'free file sharing',
+    'peer to peer file sharing',
+    'p2p file transfer',
+    'web based file sharing',
+    'no signup file transfer',
+    'encrypted file sharing',
+    'direct browser file sharing',
+    'large file transfer online',
+    'webrtc file transfer',
+    'instant file sharing',
+    'secure p2p file transfer',
+    'file sharing without upload',
+    'open source',
+    'airdrop alternative',
+    'sharedrop alternative',
+    'file transfer without cloud',
+    'anonymous file sharing',
+    'fast browser file transfer',
+    'p2p file transfer no limits',
+    'send files peer to peer',
   ],
 
-  metadataBase: new URL("https://airdelivery.site"),
+  metadataBase: new URL('https://airdelivery.site'),
   openGraph: {
-    title: "Air Delivery – Secure & Instant P2P File Sharing",
+    title: 'Air Delivery – Secure & Instant P2P File Sharing',
     description:
-      "Air Delivery lets you send large files instantly and securely with peer-to-peer WebRTC. No uploads, no sign-up, no file size limits. Just fast, private browser-to-browser sharing.",
-    url: "https://airdelivery.site",
-    siteName: "Air Delivery",
+      'Air Delivery lets you send large files instantly and securely with peer-to-peer WebRTC. No uploads, no sign-up, no file size limits. Just fast, private browser-to-browser sharing.',
+    url: 'https://airdelivery.site',
+    siteName: 'Air Delivery',
     images: [
       {
-        url: "/og-banner.png",
+        url: '/og-banner.png',
         width: 1200,
         height: 630,
-        alt: "Air Delivery – Secure & Instant P2P File Sharing",
+        alt: 'Air Delivery – Secure & Instant P2P File Sharing',
       },
     ],
-    locale: "en_US",
-    type: "website",
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Air Delivery – Secure & Instant P2P File Sharing",
+    card: 'summary_large_image',
+    title: 'Air Delivery – Secure & Instant P2P File Sharing',
     description:
-      "Instantly send large files via peer-to-peer WebRTC—no cloud, no sign-up, no limits. Secure, encrypted, browser-to-browser transfer.",
-    images: ["/og-banner.png"],
-    creator: "@imgochi",
+      'Instantly send large files via peer-to-peer WebRTC—no cloud, no sign-up, no limits. Secure, encrypted, browser-to-browser transfer.',
+    images: ['/og-banner.png'],
+    creator: '@imgochi',
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/icons/apple.png",
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/icons/apple.png',
   },
-  manifest: "/manifest.json",
+  manifest: '/manifest.json',
   robots: {
     index: true,
     follow: true,
   },
   alternates: {
-    canonical: "https://airdelivery.site",
+    canonical: 'https://airdelivery.site',
   },
 };
 
 export const viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // JSON-LD structured data kept identical to original
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
+    '@context': 'https://schema.org',
+    '@graph': [
       {
-        "@type": "WebSite",
-        "@id": "https://airdelivery.site/#website",
-        url: "https://airdelivery.site/",
-        name: "Air Delivery",
-        description:
-          "p2p file sharing with no size limits, no cloud, end‑to‑end encryption.",
+        '@type': 'WebSite',
+        '@id': 'https://airdelivery.site/#website',
+        url: 'https://airdelivery.site/',
+        name: 'Air Delivery',
+        description: 'p2p file sharing with no size limits, no cloud, end‑to‑end encryption.',
         publisher: {
-          "@id": "https://airdelivery.site/#organization",
+          '@id': 'https://airdelivery.site/#organization',
         },
         logo: {
-          "@type": "ImageObject",
-          url: "https://airdelivery.site/icons/192.png",
+          '@type': 'ImageObject',
+          url: 'https://airdelivery.site/icons/192.png',
         },
       },
       {
-        "@type": "Organization",
-        "@id": "https://airdelivery.site/#organization",
-        name: "Air Delivery",
-        url: "https://airdelivery.site/",
+        '@type': 'Organization',
+        '@id': 'https://airdelivery.site/#organization',
+        name: 'Air Delivery',
+        url: 'https://airdelivery.site/',
         logo: {
-          "@type": "ImageObject",
-          url: "https://airdelivery.site/favicon.ico",
+          '@type': 'ImageObject',
+          url: 'https://airdelivery.site/favicon.ico',
         },
-        sameAs: ["https://x.com/imgochi"],
+        sameAs: ['https://x.com/imgochi'],
       },
       {
-        "@type": "SoftwareApplication",
-        name: "Air Delivery",
-        operatingSystem: "All",
-        applicationCategory: "WebApplication",
-        browserRequirements: "Requires JavaScript",
-        url: "https://airdelivery.site/",
+        '@type': 'SoftwareApplication',
+        name: 'Air Delivery',
+        operatingSystem: 'All',
+        applicationCategory: 'WebApplication',
+        browserRequirements: 'Requires JavaScript',
+        url: 'https://airdelivery.site/',
         description:
-          "Free peer-to-peer file sharing tool using secure direct browser connections. No upload, no sign-up, just send.",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          'Free peer-to-peer file sharing tool using secure direct browser connections. No upload, no sign-up, just send.',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       },
     ],
   };
@@ -150,10 +147,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta
-          itemProp="image"
-          content="https://airdelivery.site/icons/512.png"
-        />
+        <meta itemProp="image" content="https://airdelivery.site/icons/512.png" />
 
         {/* PWA & Performance Hints */}
         <meta name="theme-color" content="#000000" />
@@ -166,15 +160,10 @@ export default function RootLayout({
 
         <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
 
-  
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
