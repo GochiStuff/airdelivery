@@ -68,9 +68,11 @@ export function useFileTransfer(
 
   // --- Constants / tuning  ( MOST OF THESE WERE SET AFTER BENCHMARKING DIFF SETTINGS ) ---------------------------------------------
   const MAX_RAM_SIZE = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
-  const peerMax = (dataChannel as any)?.maxMessageSize || 256 * 1024;
-  const CHUNK_SIZE = Math.min(256 * 1024, Math.floor(peerMax * 0.9));
-  const BUFFER_THRESHOLD = 16 * 1024 * 1024; // 16MB for high-speed link saturation
+  const peerMax = (dataChannel as any)?.maxMessageSize || 0;
+  const CHUNK_SIZE = peerMax > 0 
+    ? Math.min(256 * 1024, Math.floor(peerMax * 0.9)) 
+    : 256 * 1024;
+  const BUFFER_THRESHOLD = 4 * 1024 * 1024; // 4MB - safe limit for Chrome's 16MB buffer
   const PROGRESS_INTERVAL_MS = 500;
 
   // We store partial incoming transfers here to avoid re-rendering on each chunk
@@ -311,10 +313,12 @@ export function useFileTransfer(
           dataChannel.send(JSON.stringify({ type: "resume", transferId }));
         }
 
-        // Backpressure 
+        // Robust Backpressure 
         if (dataChannel.bufferedAmount > BUFFER_THRESHOLD) {
           await new Promise<void>((res) => {
+            const timeout = setTimeout(res, 100); // Fallback timeout
             const listener = () => {
+              clearTimeout(timeout);
               dataChannel.onbufferedamountlow = null;
               res();
             };
@@ -322,6 +326,7 @@ export function useFileTransfer(
             dataChannel.onbufferedamountlow = listener;
           });
         }
+        
         if (dataChannel.readyState !== "open")
           throw new Error("Connection closed");
 
@@ -341,7 +346,18 @@ export function useFileTransfer(
         }
 
         const packet = createPacket(transferId, finalData, isCompressed);
-        dataChannel.send(packet);
+        
+        try {
+          dataChannel.send(packet);
+        } catch (err: any) {
+          if (err.name === "OperationError") {
+            // Buffer actually full, wait more
+            await new Promise((res) => setTimeout(res, 200));
+            dataChannel.send(packet); // Retry once
+          } else {
+            throw err;
+          }
+        }
 
         // Progress tracking (throttled)
         sent += chunk.length;
@@ -713,7 +729,7 @@ export function useFileTransfer(
         ProcessRecQue(transferId);
       }
     },
-    [recvQueue]
+    []
   );
 
   // ------------------------- Reset / cancel ----------------------------
@@ -773,31 +789,44 @@ export function useFileTransfer(
     };
   }, [dataChannel, handleMessage]);
 
+  // Track IDs that are already in the processing queue to avoid duplicates
+  const enqueuedIds = useRef<Set<string>>(new Set());
+
   // ----------------------- SENDING QUEUE runner -------------------------
   useEffect(() => {
-    if (dataChannel?.readyState !== "open") return;
+    if (!dataChannel || dataChannel.readyState !== "open") return;
+
     queue.forEach((t) => {
-      if (t.status !== "queued") return;
+      if (t.status !== "queued" || enqueuedIds.current.has(t.transferId)) return;
+
+      enqueuedIds.current.add(t.transferId);
+
       // mark as sending and enqueue the send job
       setQueue((q) =>
         q.map((x) =>
           x.transferId === t.transferId ? { ...x, status: "sending" } : x
         )
       );
+
       pq.current
-        .add(() => pRetry(() => sendFile(t), { retries: 0 }))
-        .catch((err) => {
-          if (err.message === "Canceled") {
-            // already handled when canceled
-          } else {
-            console.error("Send failed for", t.transferId, err);
-            setQueue((q) =>
-              q.map((x) =>
-                x.transferId === t.transferId ? { ...x, status: "error" } : x
-              )
-            );
+        .add(async () => {
+          try {
+            await pRetry(() => sendFile(t), { retries: 0 });
+          } catch (err: any) {
+            if (err.message === "Canceled") {
+              // already handled
+            } else {
+              console.error("Send failed for", t.transferId, err);
+              setQueue((q) =>
+                q.map((x) =>
+                  x.transferId === t.transferId ? { ...x, status: "error" } : x
+                )
+              );
+            }
+          } finally {
+            enqueuedIds.current.delete(t.transferId);
           }
-        });
+        })
     });
   }, [queue, dataChannel, sendFile]);
 
