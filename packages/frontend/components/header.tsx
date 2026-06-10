@@ -2,63 +2,76 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import HistoryDrawer from "./HistoryDrawer";
+import { Github, Clock, Menu } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
+
 export default function Header() {
-  const isLoggedIn = false;
+  const [showSheet, setShowSheet] = useState(false);
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 md:px-10 backdrop-blur-md border-b bg-white shadow-lg h-16">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <Image src="/icons/logo.png" alt="Logo" width={40} height={40} />
-          <Link
-            href="/"
-            className="text-xl md:text-2xl font-semibold tracking-tighter text-zinc-900"
-          >
+      <HistoryDrawer show={showSheet} onClose={() => setShowSheet(false)} />
+      
+      <header className="w-full h-16 flex items-center justify-between px-6 md:px-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 transition-all duration-300">
+        {/* Brand Section */}
+        <Link href="/" className="flex items-center gap-2.5 group active:scale-95 transition-transform">
+          <Image 
+            src="/icons/logo.png" 
+            alt="AirDelivery Logo" 
+            width={36} 
+            height={36} 
+            className="object-contain" 
+            priority
+          />
+          <span className="text-xl font-bold tracking-tighter text-zinc-900 dark:text-zinc-100 uppercase select-none">
             AIR DELIVERY
-          </Link>
-        </div>
+          </span>
+        </Link>
 
-        <nav className="flex items-center gap-2 text-sm md:text-base font-medium p-2  text-white">
-          <span className="opacity-90 hidden sm:inline text-black">Dev</span>
+        {/* Action Group */}
+        <nav className="flex items-center gap-1 sm:gap-4">
+          {/* PC Only Icons */}
+          <div className="hidden md:flex items-center gap-4">
+            <ThemeToggle />
+            <a
+              href="https://x.com/imgochi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+              title="Follow on X"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="w-4.5 h-4.5 fill-current">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+              </svg>
+            </a>
+          </div>
+
+          {/* Persistent GitHub Link */}
           <a
-            href={`https://x.com/GochiStuff`}
+            href="https://github.com/imgochi/airdelivery"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-orange-400 transition"
-            title="Share on Twitter"
+            className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            title="Star on GitHub"
           >
-            <div className="bg-black p-2  rounded-full">
-              <svg
-                width="20"
-                height="20"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M17.53 3H21l-7.19 8.21L22 21h-6.56l-5.18-6.44L4.47 21H1l7.64-8.73L2 3h6.68l4.74 5.91L17.53 3ZM16.3 19h2.13l-5.82-7.23-1.71 1.98L16.3 19ZM5.09 5l5.38 6.69 1.7-1.97L7.36 5H5.09Z" />
-              </svg>
+            <Github className="w-5 h-5" />
+          </a>
+
+          {/* Unified Hub Trigger */}
+          <button
+            onClick={() => setShowSheet(true)}
+            className="p-2 ml-1 rounded-lg text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all active:scale-90"
+            aria-label="Toggle Menu"
+          >
+            <div className="md:hidden">
+              <Menu className="w-6 h-6" />
             </div>
-          </a>
-          <a
-            href={`https://github.com/GochiStuff/airdelivery`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-orange-400 transition"
-            title="Open source repo link on GitHub"
-          >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                x="0px"
-                y="0px"
-                width="40"
-                height="40"
-                viewBox="0 0 30 30"
-              >
-                <path d="M15,3C8.373,3,3,8.373,3,15c0,5.623,3.872,10.328,9.092,11.63C12.036,26.468,12,26.28,12,26.047v-2.051 c-0.487,0-1.303,0-1.508,0c-0.821,0-1.551-0.353-1.905-1.009c-0.393-0.729-0.461-1.844-1.435-2.526 c-0.289-0.227-0.069-0.486,0.264-0.451c0.615,0.174,1.125,0.596,1.605,1.222c0.478,0.627,0.703,0.769,1.596,0.769 c0.433,0,1.081-0.025,1.691-0.121c0.328-0.833,0.895-1.6,1.588-1.962c-3.996-0.411-5.903-2.399-5.903-5.098 c0-1.162,0.495-2.286,1.336-3.233C9.053,10.647,8.706,8.73,9.435,8c1.798,0,2.885,1.166,3.146,1.481C13.477,9.174,14.461,9,15.495,9 c1.036,0,2.024,0.174,2.922,0.483C18.675,9.17,19.763,8,21.565,8c0.732,0.731,0.381,2.656,0.102,3.594 c0.836,0.945,1.328,2.066,1.328,3.226c0,2.697-1.904,4.684-5.894,5.097C18.199,20.49,19,22.1,19,23.313v2.734 c0,0.104-0.023,0.179-0.035,0.268C23.641,24.676,27,20.236,27,15C27,8.373,21.627,3,15,3z"></path>
-              </svg>
-        
-          </a>
+            <div className="hidden md:block">
+              <Clock className="w-5 h-5 text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
+            </div>
+          </button>
         </nav>
       </header>
     </>
