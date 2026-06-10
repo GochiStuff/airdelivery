@@ -59,7 +59,12 @@ export const WebRTCProvider = ({ children }: Props) => {
         webRTC.connectToFlight(id);
       },
       leaveFlight: () => {
-        fileTrans.setMeta({ totalSent: 0, totalReceived: 0, speedBps: 0 });
+        fileTrans.setMeta({
+          totalSent: 0,
+          totalReceived: 0,
+          sendSpeedBps: 0,
+          receiveSpeedBps: 0,
+        });
         fileTrans.setQueue([]);
         fileTrans.setRecvQueue([]);
         webRTC.disconnect();
