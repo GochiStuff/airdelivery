@@ -27,7 +27,7 @@ export default function FooterStrip() {
           </button>
 
            <a
-           href={`https://github.com/imgochi/airdelivery`}
+           href={`https://github.com/GochiStuff/airdelivery`}
 
             target="_blank"
             rel="noopener noreferrer"

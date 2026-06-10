@@ -50,7 +50,7 @@ export default function Header() {
 
           {/* Persistent GitHub Link */}
           <a
-            href="https://github.com/imgochi/airdelivery"
+            href="https://github.com/GochiStuff/airdelivery"
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"

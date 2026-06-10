@@ -92,7 +92,7 @@ export default function HistoryDrawer({
                 X.com
               </a>
               <a
-                href="https://github.com/imgochi/airdelivery"
+                href="https://github.com/GochiStuff/airdelivery"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-[11px] font-bold uppercase tracking-wider rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
