@@ -11,7 +11,7 @@ export async function zipFiles(files: File[], zipName: string): Promise<File> {
   }
 
   const zipped = zipSync(data);
-  return new File([zipped], zipName.endsWith(".zip") ? zipName : `${zipName}.zip`, {
+  return new File([zipped as any], zipName.endsWith(".zip") ? zipName : `${zipName}.zip`, {
     type: "application/zip",
   });
 }
