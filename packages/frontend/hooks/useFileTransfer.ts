@@ -70,7 +70,7 @@ export function useFileTransfer(
   const MAX_RAM_SIZE = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
   const peerMax = (dataChannel as any)?.maxMessageSize || 256 * 1024;
   const CHUNK_SIZE = Math.min(256 * 1024, Math.floor(peerMax * 0.9));
-  const BUFFER_THRESHOLD = CHUNK_SIZE * 8;
+  const BUFFER_THRESHOLD = 16 * 1024 * 1024; // 16MB for high-speed link saturation
   const PROGRESS_INTERVAL_MS = 500;
 
   // We store partial incoming transfers here to avoid re-rendering on each chunk
@@ -230,32 +230,19 @@ export function useFileTransfer(
   );
 
 
-  async function* readFileInChunks(file: File) {
-    const reader = file.stream().getReader();
-    let buffer = new Uint8Array(0);
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer = concat(buffer, new Uint8Array(value));
-      while (buffer.length >= CHUNK_SIZE) {
-        yield buffer.slice(0, CHUNK_SIZE);
-        buffer = buffer.slice(CHUNK_SIZE);
-      }
-    }
-    if (buffer.length) yield buffer;
+  const COMPRESSED_EXTS = new Set([
+    "zip", "rar", "7z", "gz", "mp4", "mkv", "mov", "avi", "jpg", "jpeg", "png", "webp", "pdf", "mp3", "wav"
+  ]);
+
+  function shouldCompress(fileName: string): boolean {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    return !COMPRESSED_EXTS.has(ext || "");
   }
 
-  function concat(a: Uint8Array, b: Uint8Array) {
-    const c = new Uint8Array(a.length + b.length);
-    c.set(a, 0);
-    c.set(b, a.length);
-    return c;
-  }
-
-  // [transferIdLength][transferId][chunkSize][chunk]
-  function createPacket(transferId: string, chunk: Uint8Array) {
+  // [transferIdLength][transferId][chunkSize][isCompressed][chunk]
+  function createPacket(transferId: string, chunk: Uint8Array, isCompressed: boolean) {
     const transferIdBuf = new TextEncoder().encode(transferId);
-    const headerSize = 4 + transferIdBuf.length + 4;
+    const headerSize = 4 + transferIdBuf.length + 4 + 1;
     const packet = new ArrayBuffer(headerSize + chunk.byteLength);
     const view = new DataView(packet);
 
@@ -268,6 +255,9 @@ export function useFileTransfer(
 
     view.setUint32(offset, chunk.byteLength);
     offset += 4;
+
+    view.setUint8(offset, isCompressed ? 1 : 0);
+    offset += 1;
 
     new Uint8Array(packet, offset).set(new Uint8Array(chunk));
 
@@ -290,12 +280,14 @@ export function useFileTransfer(
       let lastTime = Date.now();
       let lastSent = 0;
 
+      const compress = shouldCompress(file.name);
+
       dataChannel.send(
         JSON.stringify({ type: "init", transferId, directoryPath, size: total, thumbnail })
       );
 
-      for await (const chunk of readFileInChunks(file)) {
-        
+      let offset = 0;
+      while (offset < total) {
         if (controls.canceled) {
           dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
           setQueue((q) =>
@@ -326,19 +318,34 @@ export function useFileTransfer(
               dataChannel.onbufferedamountlow = null;
               res();
             };
-            dataChannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD;
+            dataChannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD / 2;
             dataChannel.onbufferedamountlow = listener;
           });
         }
         if (dataChannel.readyState !== "open")
           throw new Error("Connection closed");
 
-        const compressed = lz4.compress(chunk);
-        const packet = createPacket(transferId, compressed);
+        const chunkBlob = file.slice(offset, offset + CHUNK_SIZE);
+        const chunkBuffer = await chunkBlob.arrayBuffer();
+        const chunk = new Uint8Array(chunkBuffer);
+
+        let finalData = chunk;
+        let isCompressed = false;
+
+        if (compress) {
+          const compressed = lz4.compress(chunk);
+          if (compressed.length < chunk.length) {
+            finalData = compressed;
+            isCompressed = true;
+          }
+        }
+
+        const packet = createPacket(transferId, finalData, isCompressed);
         dataChannel.send(packet);
 
         // Progress tracking (throttled)
         sent += chunk.length;
+        offset += chunk.length;
         const now = Date.now();
         const pct = (sent / total) * 100;
         if (
@@ -401,9 +408,12 @@ export function useFileTransfer(
     const chunkSize = view.getUint32(offset);
     offset += 4;
 
+    const isCompressed = view.getUint8(offset) === 1;
+    offset += 1;
+
     const chunk = buffer.slice(offset, offset + chunkSize);
 
-    return { transferId, chunk };
+    return { transferId, chunk, isCompressed };
   }
 
   async function ProcessRecQue(transferId: string) {
@@ -687,13 +697,16 @@ export function useFileTransfer(
       }
 
       // ----------------- Binary data path -----------------
-      const { transferId, chunk } = unpack(event.data);
+      const { transferId, chunk, isCompressed } = unpack(event.data);
 
       const rec = incoming.current[transferId];
       if (!rec) return;
 
-      // Decompress the received chunk and queue it for writing
-      const decompressed = lz4.decompress(new Uint8Array(chunk));
+      // Decompress only if the sender flagged it as compressed
+      const decompressed = isCompressed 
+        ? lz4.decompress(new Uint8Array(chunk))
+        : new Uint8Array(chunk);
+
       rec.queue.push(decompressed.buffer);
       if (!rec.writing) {
         rec.writing = true;
