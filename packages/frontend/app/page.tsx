@@ -92,8 +92,24 @@ export default function MainPage() {
   // --- Render ---------------------------------------------------------------
   return (
     <>
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Sharp Grid */}
+        <div className="absolute inset-0 bg-sharp-grid opacity-[0.4] dark:opacity-[0.2]" />
+        
+        {/* Dot Grid Layer */}
+        <div className="absolute inset-0 bg-dot-grid opacity-[0.5] dark:opacity-[0.3]" />
+
+        {/* Dynamic Glows */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/10 dark:bg-orange-600/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 dark:bg-blue-600/5 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+        
+        {/* Ambient Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white via-transparent to-white dark:from-zinc-950 dark:via-transparent dark:to-zinc-950 opacity-60" />
+      </div>
+
       {/* Main content */}
-      <main className="relative flex mb-10 flex-col md:flex-row items-center max-w-9xl mx-auto justify-around min-h-screen overflow-hidden">
+      <main className="relative flex mb-10 flex-col md:flex-row items-center max-w-9xl mx-auto justify-around min-h-[calc(100vh-64px)] overflow-hidden">
         {invitationPop}
 
         {/* Flight shortcut bar shown when inside a flight */}
