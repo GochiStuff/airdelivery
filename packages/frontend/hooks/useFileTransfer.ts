@@ -284,14 +284,23 @@ export function useFileTransfer(
 
       const compress = shouldCompress(file.name);
 
-      dataChannel.send(
-        JSON.stringify({ type: "init", transferId, directoryPath, size: total, thumbnail })
-      );
+      if (dataChannel.readyState !== "open") throw new Error("Connection closed before init");
+
+      // JSON messages count towards maxMessageSize too.
+      // If thumbnail is still too big, we omit it to save the connection.
+      const initMsg = JSON.stringify({ type: "init", transferId, directoryPath, size: total, thumbnail });
+      if (peerMax > 0 && initMsg.length > peerMax) {
+        dataChannel.send(JSON.stringify({ type: "init", transferId, directoryPath, size: total }));
+      } else {
+        dataChannel.send(initMsg);
+      }
 
       let offset = 0;
       while (offset < total) {
         if (controls.canceled) {
-          dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
+          if (dataChannel.readyState === "open") {
+            dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
+          }
           setQueue((q) =>
             q.map((x) =>
               x.transferId === transferId ? { ...x, status: "canceled" } : x
@@ -308,9 +317,13 @@ export function useFileTransfer(
           throw new Error("Canceled");
         }
         if (controls.paused) {
-          dataChannel.send(JSON.stringify({ type: "pause", transferId }));
+          if (dataChannel.readyState === "open") {
+            dataChannel.send(JSON.stringify({ type: "pause", transferId }));
+          }
           await controls.resumePromise;
-          dataChannel.send(JSON.stringify({ type: "resume", transferId }));
+          if (dataChannel.readyState === "open") {
+            dataChannel.send(JSON.stringify({ type: "resume", transferId }));
+          }
         }
 
         // Robust Backpressure 
@@ -386,7 +399,9 @@ export function useFileTransfer(
       }
 
       // Signal completion and update queues/meta
-      dataChannel.send(JSON.stringify({ type: "done", transferId }));
+      if (dataChannel.readyState === "open") {
+        dataChannel.send(JSON.stringify({ type: "done", transferId }));
+      }
       setQueue((q) =>
         q.map((x) =>
           x.transferId === transferId

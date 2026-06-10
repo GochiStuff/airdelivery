@@ -1,8 +1,8 @@
 export async function generateThumbnail(file: File): Promise<string> {
   const type = file.type;
-  const TARGET_W = 1280;
-  const TARGET_H = 720;
-  const QUALITY = 0.7;
+  const TARGET_W = 320;
+  const TARGET_H = 180;
+  const QUALITY = 0.6;
 
   // Use worker for images
   if (type.startsWith("image/")) {
