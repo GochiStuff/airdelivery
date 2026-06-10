@@ -47,13 +47,13 @@ const TransferCard = memo(({
   );
 
   return (
-    <div className="relative w-48 flex-shrink-0 rounded-2xl outline-1 outline-zinc-300 bg-white shadow-md hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden">
-      <div className="absolute top-2 left-2 bg-white/80 p-1 rounded-full shadow-md">
+    <div className="relative w-48 flex-shrink-0 rounded-2xl outline-1 outline-zinc-300 dark:outline-zinc-700 bg-white dark:bg-zinc-900 shadow-md hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden">
+      <div className="absolute top-2 left-2 bg-white/80 dark:bg-zinc-800/80 p-1 rounded-full shadow-md">
         {icon}
       </div>
 
       {item.thumbnail ? (
-        <div className="w-full h-32 bg-zinc-100">
+        <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-800">
           <img
             src={item.thumbnail}
             alt="Thumbnail"
@@ -61,24 +61,24 @@ const TransferCard = memo(({
           />
         </div>
       ) : (
-        <div className="w-full h-32 bg-zinc-100 flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center shadow-inner">
-            <File className="w-6 h-6 text-zinc-500" />
+        <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center shadow-inner">
+            <File className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
           </div>
         </div>
       )}
 
       <div className="flex flex-col items-center text-center px-3 py-2 gap-1">
-        <span className="text-sm font-medium text-zinc-800 truncate w-full">
+        <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate w-full">
           {item.file?.name || item.name || item.directoryPath}
         </span>
-        <div className="w-full h-1.5 rounded-full bg-zinc-200 overflow-hidden shadow-inner">
+        <div className="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden shadow-inner">
           <div
             className="h-full bg-orange-500 transition-all duration-300"
             style={{ width: `${item.progress || 0}%` }}
           />
         </div>
-        <div className="w-full flex justify-between text-[11px] text-zinc-500 mt-1 font-medium">
+        <div className="w-full flex justify-between text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
           <span>{item.progress}%</span>
           <span>{statusLabels[item.status] || item.status}</span>
         </div>
@@ -89,7 +89,7 @@ const TransferCard = memo(({
           <>
             {item.status !== "done" && item.status !== "canceled" && (
               <button
-                className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
+                className="rounded-full p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 transition"
                 onClick={() => cancelTransfer?.(item.transferId)}
                 title="Cancel"
               >
@@ -97,13 +97,13 @@ const TransferCard = memo(({
               </button>
             )}
             {item.status === "done" && item.downloaded ? (
-              <p className="text-[11px] text-zinc-500 font-semibold">Downloaded</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-semibold">Downloaded</p>
             ) : (
               item.status === "done" &&
               !autoDownload &&
               item.blobUrl && (
                 <button
-                  className="rounded-full p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-500 border border-blue-200 transition"
+                  className="rounded-full p-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-500 dark:text-blue-400 border border-blue-200 dark:border-blue-800 transition"
                   onClick={() => fileDownload?.(item)}
                   title="Download"
                 >
@@ -116,7 +116,7 @@ const TransferCard = memo(({
           <>
             {item.status === "paused" && (
               <button
-                className="rounded-full p-1.5 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 transition"
+                className="rounded-full p-1.5 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800 transition"
                 onClick={() => resumeTransfer?.(item.transferId)}
                 title="Resume"
               >
@@ -125,7 +125,7 @@ const TransferCard = memo(({
             )}
             {item.status === "sending" && (
               <button
-                className="rounded-full p-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border border-yellow-200 transition"
+                className="rounded-full p-1.5 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800 transition"
                 onClick={() => pauseTransfer?.(item.transferId)}
                 title="Pause"
               >
@@ -134,7 +134,7 @@ const TransferCard = memo(({
             )}
             {item.status !== "done" && item.status !== "canceled" && (
               <button
-                className="rounded-full p-1.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition"
+                className="rounded-full p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800 transition"
                 onClick={() => cancelTransfer?.(item.transferId)}
                 title="Cancel"
               >
@@ -169,8 +169,8 @@ export function QueueTray({
   const [show, setShow] = useState(false);
 
   return (
-    <div className="bg-white relative rounded-2xl shadow-sm p-4">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+    <div className="bg-white dark:bg-zinc-900 relative rounded-2xl shadow-sm p-4 border dark:border-zinc-800">
+      <h3 className="text-lg font-semibold mb-4 dark:text-zinc-100">{title}</h3>
  
       <div className="absolute top-3 right-4 flex gap-2">
         {typeof autoDownload !== "undefined" && (
@@ -184,9 +184,9 @@ export function QueueTray({
       </div>
 
       {show && typeof autoDownload !== "undefined" && (
-        <div className="absolute top-8 right-2 z-50 max-w-102 rounded-xl border bg-white p-4 shadow-xl animate-fadeIn">
+        <div className="absolute top-8 right-2 z-50 max-w-102 rounded-xl border dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xl animate-fadeIn">
           <div className="flex justify-end mb-2">
-            <button onClick={() => setShow(false)}>
+            <button onClick={() => setShow(false)} className="dark:text-zinc-400">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -196,7 +196,7 @@ export function QueueTray({
               onCheckedChange={setAutoDownload}
               id="auto-download-toggle"
             />
-            <label htmlFor="auto-download-toggle" className="text-sm">
+            <label htmlFor="auto-download-toggle" className="text-sm dark:text-zinc-200">
               Auto-download
             </label>
           </div>
@@ -205,7 +205,7 @@ export function QueueTray({
               Auto-download is off. Use download buttons below each file.
             </p>
           )}
-          <ul className="list-disc list-inside text-sm space-y-1">
+          <ul className="list-disc list-inside text-sm space-y-1 dark:text-zinc-400">
             <li>Use manual download if blocked.</li>
             <li className="text-orange-600">Use Opera if issue persists.</li>
             <li>Upload ZIPs for multiple small files.</li>
@@ -215,9 +215,9 @@ export function QueueTray({
         </div>
       )}
 
-      <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-300 p-2">
+      <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 p-2">
         {items.length === 0 ? (
-          <div className="flex flex-col h-56 items-center justify-center w-full text-zinc-400 py-8">
+          <div className="flex flex-col h-56 items-center justify-center w-full text-zinc-400 dark:text-zinc-600 py-8">
             <File className="w-8 h-8 mb-2" />
             <span className="text-sm">No transfers yet</span>
           </div>

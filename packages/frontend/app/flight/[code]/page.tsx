@@ -104,19 +104,19 @@ export default function RoomPage() {
   // Render
   // -----------------------------------------------------------------------
   return (
-    <main className="min-h-screen bg-gray-300 text-zinc-900 py-8 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
       {/* Share popup (kept as in original) */}
       <SharePopup />
 
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white rounded-2xl shadow-xl p-6 sm:p-8 gap-6 mb-6 transition-all">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-6 sm:p-8 gap-6 mb-6 transition-all border dark:border-zinc-800">
           {/* Left: Flight Info */}
           <div className="flex flex-col gap-3 w-full md:w-auto">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-wide flex items-center gap-2">
                 FLIGHT
-                <span className="bg-zinc-100  text-xl  sm:text-xl font-mono text-zinc-700 px-2 py-1 rounded-lg border border-zinc-200 ">
+                <span className="bg-zinc-100 dark:bg-zinc-800 text-xl sm:text-xl font-mono text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700">
                   {flight}
                 </span>
               </h1>
@@ -153,7 +153,7 @@ export default function RoomPage() {
                 <span className="text-sm">Show</span>
               </button>
 
-              <span className="text-xs hidden md:inline text-zinc-500 mt-1 sm:text-center">
+              <span className="text-xs hidden md:inline text-zinc-500 dark:text-zinc-400 mt-1 sm:text-center">
                 Show QR or code
               </span>
             </div>
@@ -162,13 +162,13 @@ export default function RoomPage() {
             <div className="flex flex-col items-start sm:items-center">
               <button
                 onClick={handleLeave}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold shadow-md transition duration-200"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-800 dark:bg-zinc-100 hover:bg-zinc-700 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-semibold shadow-md transition duration-200"
               >
                 <LogOut className="w-5 h-5" />
                 <span className="hidden text-sm md:inline">Leave</span>
               </button>
 
-              <span className="text-xs hidden md:inline text-zinc-500 mt-1 sm:text-center">
+              <span className="text-xs hidden md:inline text-zinc-500 dark:text-zinc-400 mt-1 sm:text-center">
                 Leave the flight
               </span>
             </div>
@@ -177,8 +177,8 @@ export default function RoomPage() {
 
         {/* QR Share Modal (keeps exact structure & content) */}
         {showQR && (
-          <div className="fixed animate-fadeIn inset-0 bg-zinc-900/60 h-screen flex items-center justify-center z-50">
-            <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xs flex flex-col items-center border-2 border-orange-400">
+          <div className="fixed animate-fadeIn inset-0 bg-zinc-900/60 dark:bg-black/80 h-screen flex items-center justify-center z-50 p-4">
+            <div className="relative bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-8 w-full max-w-xs flex flex-col items-center border-2 border-orange-400">
               <button
                 onClick={() => setShowQR(false)}
                 className="absolute top-3 right-3 text-zinc-400 hover:text-orange-600 text-2xl font-bold"
@@ -188,14 +188,14 @@ export default function RoomPage() {
               </button>
 
               <div className="mb-2 flex items-center gap-2">
-                <span className="font-mono text-lg bg-orange-100 text-orange-700 px-3 py-1 rounded-lg border border-orange-200">
+                <span className="font-mono text-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-lg border border-orange-200 dark:border-orange-800">
                   {flight}
                 </span>
               </div>
 
-              <h2 className="text-xl font-bold text-zinc-900 mb-3 text-center">Share this Flight</h2>
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-3 text-center">Share this Flight</h2>
 
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-4 p-2 bg-white rounded-xl">
                 <QRCodeSVG
                   value={typeof window !== "undefined" ? window.location.href : ""}
                   size={180}
@@ -205,7 +205,7 @@ export default function RoomPage() {
               <div className="w-full flex flex-col items-center mb-2">
                 <div className="flex items-center gap-2 w-full">
                   <input
-                    className="flex-1 bg-zinc-100 rounded-lg px-2 py-1 text-sm font-mono border border-zinc-200 text-zinc-700"
+                    className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg px-2 py-1 text-sm font-mono border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300"
                     value={typeof window !== "undefined" ? window.location.href : ""}
                     readOnly
                     onFocus={(e) => e.target.select()}
@@ -221,17 +221,17 @@ export default function RoomPage() {
                         });
                       }
                     }}
-                    className="p-1 rounded hover:bg-orange-100 text-orange-600"
+                    className="p-1 rounded hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400"
                     title="Share via OS"
                   >
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
 
-                <span className="text-xs text-zinc-500 mt-1">Ask the reciver to join.</span>
+                <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Ask the reciver to join.</span>
               </div>
 
-              <p className="mt-2 text-sm text-zinc-600 text-center">Scan QR or share the link to join this flight.</p>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 text-center">Scan QR or share the link to join this flight.</p>
             </div>
           </div>
         )}
@@ -239,9 +239,9 @@ export default function RoomPage() {
         {/* Main Content: Upload area + Users panel + Queue */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upload area (left / large) */}
-          <div className="col-span-1 lg:col-span-2 bg-white p-6 rounded-3xl shadow-md flex flex-col items-center justify-center">
+          <div className="col-span-1 lg:col-span-2 bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-md flex flex-col items-center justify-center border dark:border-zinc-800">
             <div
-              className="w-full h-56 flex flex-col items-center justify-center border-2 border-dashed border-orange-400 rounded-2xl bg-white hover:bg-orange-50 transition cursor-pointer p-6 text-center"
+              className="w-full h-56 flex flex-col items-center justify-center border-2 border-dashed border-orange-400 rounded-2xl bg-white dark:bg-zinc-900 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition cursor-pointer p-6 text-center"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -254,8 +254,8 @@ export default function RoomPage() {
               }}
             >
               <Folder className="w-12 h-12 text-orange-500 mb-3" />
-              <p className="text-lg font-medium text-zinc-800">Drag & Drop files or folders</p>
-              <span className="mt-1 text-sm text-zinc-500">or select manually</span>
+              <p className="text-lg font-medium text-zinc-800 dark:text-zinc-200">Drag & Drop files or folders</p>
+              <span className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">or select manually</span>
 
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 {/* Select files button */}
@@ -266,7 +266,7 @@ export default function RoomPage() {
                 </label>
 
                 {/* Select folder button */}
-                <label className="px-5 py-2 rounded-full border border-orange-500 text-orange-600 hover:bg-orange-50 font-medium flex items-center gap-2 text-sm cursor-pointer transition">
+                <label className="px-5 py-2 rounded-full border border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 font-medium flex items-center gap-2 text-sm cursor-pointer transition">
                   <Folder className="w-4 h-4" />
                   <span>Select Folder</span>
                   <input
@@ -283,11 +283,11 @@ export default function RoomPage() {
           </div>
 
           {/* Users Panel (right / small) */}
-          <div className="bg-white rounded-3xl shadow-md p-5 max-h-96 flex flex-col">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-md p-5 max-h-96 flex flex-col border dark:border-zinc-800">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-semibold text-zinc-800">
+                <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">
                   {members.length <= 1 ? "Nearby Users" : "In Flight"}
                 </h2>
               </div>
@@ -295,19 +295,19 @@ export default function RoomPage() {
               {members.length <= 1 && (
                 <button
                   onClick={handleRefresh}
-                  className="p-2 rounded-full hover:bg-zinc-100 transition"
+                  className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                   title="Refresh"
                 >
                   <RefreshCwIcon
-                    className={`w-5 h-5 ${isSpinning ? "animate-spin" : "transition-transform"}`}
+                    className={`w-5 h-5 ${isSpinning ? "animate-spin" : "transition-transform"} dark:text-zinc-400`}
                   />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-col gap-3 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
               {(members.length <= 1 ? nearByUsers : members).length === 0 ? (
-                <div className="text-zinc-400 text-sm text-center py-6">
+                <div className="text-zinc-400 dark:text-zinc-600 text-sm text-center py-6">
                   {members.length <= 1 ? "No nearby users" : "No members"}
                 </div>
               ) : (
@@ -315,13 +315,13 @@ export default function RoomPage() {
                   <button
                     key={idx}
                     onClick={() => members.length <= 1 && inviteToFlight(m, flight)}
-                    className="w-full flex items-center gap-3 rounded-xl px-4 py-2 border border-zinc-200 hover:border-orange-400 hover:bg-orange-50 transition text-left focus:ring-2 focus:ring-orange-200"
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-2 border border-zinc-200 dark:border-zinc-800 hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/10 transition text-left focus:ring-2 focus:ring-orange-200"
                     title={members.length <= 1 ? `Connect to ${m.name}` : m.name}
                   >
-                    <User className="w-6 h-6 text-orange-500 bg-orange-100 hover:bg-orange-300 rounded-full p-1" />
+                    <User className="w-6 h-6 text-orange-500 bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-300 dark:hover:bg-orange-700 rounded-full p-1" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-zinc-900 truncate">{m.name}</span>
-                      <span className="text-xs text-zinc-500 font-mono truncate">ID: {m.id}</span>
+                      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{m.name}</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate">ID: {m.id}</span>
                     </div>
                   </button>
                 ))

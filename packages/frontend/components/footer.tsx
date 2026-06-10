@@ -27,7 +27,8 @@ export default function FooterStrip() {
           </button>
 
            <a
-            href={`https://github.com/GochiStuff/airdelivery`}
+           href={`https://github.com/imgochi/airdelivery`}
+
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-orange-400 bg-white  rounded-full transition"
@@ -52,7 +53,7 @@ export default function FooterStrip() {
           <span  aria-labelledby="author" className="text-xs sm:text-sm text-zinc-500">
             Built with <span className="text-pink-400">❤️</span> by{" "}
             <a
-              href="https://x.com/gochistuff"
+              href="https://x.com/imgochi"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:underline font-medium"

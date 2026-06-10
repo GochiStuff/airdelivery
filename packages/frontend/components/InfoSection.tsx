@@ -102,51 +102,51 @@ const InfoSection = () => {
       </section>
 
       {/* Stats */}
-      <section className="py-12 md:py-32 px-6 sm:px-12 lg:px-24 border-b bg-accent border-black/10">
+      <section className="py-12 md:py-32 px-6 sm:px-12 lg:px-24 border-b bg-accent dark:bg-zinc-900/50 border-black/10 dark:border-white/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 md:mb-20 tracking-tight">The numbers speak</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 md:mb-20 tracking-tight dark:text-zinc-100">The numbers speak</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
             <div>
               <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-4">TBs+</p>
-              <p className="text-xl text-neutral-700">Data Shared</p>
+              <p className="text-xl text-neutral-700 dark:text-neutral-300">Data Shared</p>
             </div>
             <div>
               <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-">20K+</p>
-              <p className="text-xl text-neutral-700">Users in First Month</p>
+              <p className="text-xl text-neutral-700 dark:text-neutral-300">Users in First Month</p>
             </div>
             <div>
               <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-">27K+</p>
-              <p className="text-xl text-neutral-700">Share Sessions</p>
+              <p className="text-xl text-neutral-700 dark:text-neutral-300">Share Sessions</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-12 md:py-32 px-6 sm:px-12 lg:px-24 border-b   border-black/10">
+      <section className="py-12 md:py-32 px-6 sm:px-12 lg:px-24 border-b border-black/10 dark:border-white/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-12 tracking-tight">How it works</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-12 tracking-tight dark:text-zinc-100">How it works</h2>
           <ol className="space-y-12 text-xl">
             <li className="flex items-start">
               <div>
-                <h3 className="text-2xl font-semibold mb-2">
+                <h3 className="text-2xl font-semibold mb-2 dark:text-zinc-200">
                   Open <span className="text-orange-500">airdelivery.site</span> on both devices
                 </h3>
-                <p className="text-neutral-600 leading-relaxed">
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   Works on any modern browser, no installation required.
                 </p>
               </div>
             </li>
             <li className="flex items-start">
               <div>
-                <h3 className="text-2xl font-semibold mb-2">Share from one device, join from the other</h3>
-                <p className="text-neutral-600 leading-relaxed">Simple interface with minimal steps to connect.</p>
+                <h3 className="text-2xl font-semibold mb-2 dark:text-zinc-200">Share from one device, join from the other</h3>
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">Simple interface with minimal steps to connect.</p>
               </div>
             </li>
             <li className="flex items-start">
               <div>
-                <h3 className="text-2xl font-semibold mb-2">Transfer directly, peer-to-peer</h3>
-                <p className="text-neutral-600 leading-relaxed">End-to-end encrypted with no server uploads.</p>
+                <h3 className="text-2xl font-semibold mb-2 dark:text-zinc-200">Transfer directly, peer-to-peer</h3>
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">End-to-end encrypted with no server uploads.</p>
               </div>
             </li>
           </ol>

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { SocketProvider } from "@/context/socketContext";
 import Header from "@/components/header";
-import { Oswald } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import FooterStrip from "@/components/footer";
@@ -11,13 +10,13 @@ import Providers from "./providers";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
-const oswald = Oswald({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -200,7 +199,7 @@ export default function RootLayout({
         </>
       )}
 
-      <body className={`${oswald.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
         {/* @ts-ignore */}
         <amp-auto-ads type="adsense" data-ad-client="ca-pub-6215596158227491" />
 

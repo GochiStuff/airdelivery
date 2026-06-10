@@ -8,6 +8,9 @@ import * as lz4 from 'lz4js';
 import { flattenFileList } from "@/utils/flattenFilelist";
 import { v4 } from "uuid";
 import { generateThumbnail } from "@/lib/generateThumbnail";
+import { zipFiles } from "@/utils/compress";
+
+import { addToHistory } from "@/lib/history";
 
 // ----------------------------- Types -----------------------------------
 
@@ -81,6 +84,8 @@ export function useFileTransfer(
         queue: ArrayBuffer[];
         lastProgressUpdate: number;
         writer: WritableStreamDefaultWriter | null;
+        directoryPath: string;
+        thumbnail?: string;
       }
     >
   >({});
@@ -179,7 +184,24 @@ export function useFileTransfer(
   const handleFileSelect = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
-      const files = await flattenFileList(e.target.files);
+      let files = await flattenFileList(e.target.files);
+      if (files.length === 0) return;
+
+      const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+
+      // Next-level Folder Preservation: Zip multiple files automatically if size is reasonable
+      if (files.length > 1 && totalSize < 500 * 1024 * 1024) {
+        try {
+          // Determine zip name from relative path or first file
+          const firstPath = (files[0] as any).webkitRelativePath;
+          const folderName = firstPath ? firstPath.split("/")[0] : "archive";
+          
+          const zippedFile = await zipFiles(files, folderName);
+          files = [zippedFile];
+        } catch (err) {
+          console.error("Zipping failed, falling back to individual files", err);
+        }
+      }
 
       const transfers = await Promise.all(
         files.map(async (file) => {
@@ -281,6 +303,14 @@ export function useFileTransfer(
               x.transferId === transferId ? { ...x, status: "canceled" } : x
             )
           );
+          addToHistory({
+            id: transferId,
+            name: directoryPath,
+            size: total,
+            type: "send",
+            status: "canceled",
+            thumbnail,
+          });
           throw new Error("Canceled");
         }
         if (controls.paused) {
@@ -342,6 +372,14 @@ export function useFileTransfer(
         )
       );
       setMeta((m) => ({ ...m, totalSent: m.totalSent + total }));
+      addToHistory({
+        id: transferId,
+        name: directoryPath,
+        size: total,
+        type: "send",
+        status: "done",
+        thumbnail,
+      });
     },
     [dataChannel]
   );
@@ -417,6 +455,13 @@ export function useFileTransfer(
               r.transferId === transferId ? { ...r, status: "error" } : r
             )
           );
+          addToHistory({
+            id: transferId,
+            name: rec.directoryPath || "Unknown File", // Wait, rec doesn't have directoryPath in its type but it's used?
+            size: rec.size,
+            type: "receive",
+            status: "error",
+          });
           return;
         }
       }
@@ -445,6 +490,15 @@ export function useFileTransfer(
               : r
           )
         );
+
+        addToHistory({
+          id: transferId,
+          name: rec.directoryPath,
+          size: rec.size,
+          type: "receive",
+          status: "done",
+          thumbnail: rec.thumbnail,
+        });
 
         await new Promise((res) => setTimeout(res, 50));
       }
@@ -542,6 +596,8 @@ export function useFileTransfer(
               size,
               received: 0,
               lastProgressUpdate: 0,
+              directoryPath,
+              thumbnail,
             };
 
             setRecvQueue((rq) => [
@@ -810,8 +866,20 @@ export function useFileTransfer(
       if (dataChannel && dataChannel.readyState === "open") {
         dataChannel.send(JSON.stringify({ type: "cancel", transferId }));
       }
+
+      const item = queue.find((q) => q.transferId === transferId);
+      if (item) {
+        addToHistory({
+          id: transferId,
+          name: item.directoryPath,
+          size: item.file.size,
+          type: "send",
+          status: "canceled",
+          thumbnail: item.thumbnail,
+        });
+      }
     },
-    [dataChannel]
+    [dataChannel, queue]
   );
 
   const cancelReceive = useCallback(
@@ -819,10 +887,21 @@ export function useFileTransfer(
       // Cancel a receiving transfer and notify remote
       const rec = incoming.current[transferId];
       if (rec) {
-        if (!rec.writer) return;
-        try {
-          rec.writer.abort();
-        } catch {}
+        if (rec.writer) {
+          try {
+            rec.writer.abort();
+          } catch {}
+        }
+        
+        addToHistory({
+          id: transferId,
+          name: rec.directoryPath,
+          size: rec.size,
+          type: "receive",
+          status: "canceled",
+          thumbnail: rec.thumbnail,
+        });
+
         delete incoming.current[transferId];
       }
       setRecvQueue((rq) =>

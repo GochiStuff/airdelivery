@@ -2,20 +2,20 @@ import { ArrowDown, ArrowUp, Gauge } from "lucide-react";
 
 export function MetricsSection({ meta }: { meta: any }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4  p-4 sm:p-6 rounded-3xl">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 sm:p-6 rounded-3xl">
       <MetricCard
         label="Total Sent"
         value={`${(meta.totalSent / 1e9).toFixed(2)} GB`}
         icon={<ArrowUp className="w-4 h-4 " />}
         iconBg="bg-blue-400"
-        cardBg="bg-white"
+        cardBg="bg-white dark:bg-zinc-900"
       />
       <MetricCard
         label="Total Received"
         value={`${(meta.totalReceived / 1e9).toFixed(2)} GB`}
         icon={<ArrowDown className="w-4 h-4 " />}
         iconBg="bg-green-400"
-        cardBg="bg-white"
+        cardBg="bg-white dark:bg-zinc-900"
       />
       <MetricCard
         label="Current Speed"
@@ -26,8 +26,7 @@ export function MetricsSection({ meta }: { meta: any }) {
         }
         icon={<Gauge className="w-4 h-4 " />}
         iconBg="bg-yellow-400"
-        cardBg="bg-white"
-        
+        cardBg="bg-white dark:bg-zinc-900"
       />
     </div>
   );
@@ -48,13 +47,13 @@ function MetricCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-4 flex flex-col justify-between shadow border border-zinc-200 ${cardBg}`}
+      className={`rounded-2xl p-4 flex flex-col justify-between shadow border border-zinc-200 dark:border-zinc-800 ${cardBg}`}
     >
       <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <span className="text-sm text-zinc-700 font-medium">{label}</span>
+        <span className="text-sm text-zinc-700 dark:text-zinc-400 font-medium">{label}</span>
         <div className={`p-2 rounded-full ${iconBg}`}>{icon}</div>
       </div>
-      <span className="text-xl sm:text-2xl text-nowrap  font-semibold  text-zinc-900">{value}</span>
+      <span className="text-xl sm:text-2xl text-nowrap font-semibold text-zinc-900 dark:text-zinc-100">{value}</span>
     </div>
   );
 }
