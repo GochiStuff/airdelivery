@@ -4,22 +4,6 @@ import { useRouter } from 'next/navigation';
 
 type Candidate = RTCIceCandidateInit;
 
-function userMessage(msg: string) {
-  // user-friendly status strings.
-  if (msg.includes('DataChannel opened')) return 'Connection established';
-  if (msg.includes('Connected')) return 'Connection established';
-  if (msg.includes('Offer sent')) return 'Ready to connect';
-  if (msg.includes('Answer sent')) return 'Offer accepted...';
-  if (msg.includes('Remote description set')) return 'finalizing...';
-  if (msg.includes('Added ICE candidate')) return 'Connection improved';
-  if (msg.includes('Buffered ICE candidate')) return 'Connecting ...';
-  if (msg.includes('Joined signaling')) return 'Joined room, waiting';
-  if (msg.includes('Failed to join')) return 'Failed to join room';
-  if (msg.includes('Invalid room code')) return 'Invalid room code';
-  if (msg.includes('Failed to add ICE candidate')) return 'Connection Failed';
-  return msg;
-}
-
 type Member = {
   id: string;
   name: string;
@@ -31,7 +15,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
   const peer = useRef<RTCPeerConnection | null>(null);
   const dataChannel = useRef<RTCDataChannel | null>(null);
   const controlChannel = useRef<RTCDataChannel | null>(null);
-  const [status, setStatus] = useState('Connecting...');
+  const [status, setStatus] = useState('Waiting for someone to join…');
   const [members, setMembers] = useState<Member[]>([]);
   const [ownerId, setOwnerId] = useState<string>('');
   const [nearByUsers, setNearByUsers] = useState<Member[]>([]);
@@ -41,15 +25,6 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
 
   function connectToFlight(code: string) {
     setFlightCode(code);
-  }
-
-  function log(msg: string) {
-    const friendly = userMessage(msg);
-    setStatus(friendly);
-  }
-
-  function sendFeedback(form: { email: string; type: string; subject: string; message: string }) {
-    socket?.emit('feedback', JSON.stringify({ form }));
   }
 
   // PEER CONNECTION
@@ -62,16 +37,13 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
       ],
     });
 
-    // Connection state change handling
     let iceRestarted = false;
     pc.onconnectionstatechange = () => {
       const state = peer.current?.connectionState;
       if (state === 'disconnected') {
-        // Transient (e.g. Wi-Fi to cellular switch). Give ICE one restart
-        // chance before tearing the whole session down.
         if (!iceRestarted) {
           iceRestarted = true;
-          log('Reconnecting...');
+          setStatus('Connection lost — reconnecting…');
           pc.restartIce();
           setTimeout(() => {
             if (peer.current?.connectionState === 'disconnected') disconnect();
@@ -85,7 +57,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
       }
       if (state === 'connected') {
         iceRestarted = false;
-        log('Connected');
+        setStatus('Connected');
       }
     };
 
@@ -94,10 +66,10 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
     pc.onicecandidate = (e) => {
       if (e.candidate && socket?.id) {
         if (isOwner) {
-          // OWNER: Buffer own candidates until joiner is known.
+          // OWNER: Buffer own candidates until joiner's socket id is known (comes with the answer).
           queuedOwnerCandidates.current.push(e.candidate);
         } else {
-          // JOINER: Send candidates to the owner (id).
+          // JOINER: Remote id is known from the offer — send immediately.
           socket?.emit('ice-candidate', { id, candidate: e.candidate });
         }
       }
@@ -138,30 +110,29 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
     socket?.emit('leaveFlight');
   }
 
-  // SENDER
+  // SENDER (owner/host side)
   async function initiateSender() {
     if (!peer.current) return;
 
     // Bulk data channel for file chunks, plus a dedicated control channel so
     // JSON messages (init/pause/cancel) never queue behind chunk floods.
     dataChannel.current = peer.current.createDataChannel('fileTransfer');
-    dataChannel.current.onopen = () => log('DataChannel opened.');
+    dataChannel.current.onopen = () => setStatus('Connected');
     dataChannel.current.onmessage = onMessage;
 
     controlChannel.current = peer.current.createDataChannel('control', { ordered: true });
-    controlChannel.current.onopen = () => log('Control channel opened.');
     controlChannel.current.onmessage = onMessage;
 
     const offer = await peer.current.createOffer();
     await peer.current.setLocalDescription(offer);
 
-    log('Preparing offer...');
+    setStatus('Waiting for other side to connect…');
     socket?.emit('offer', flightCode, { sdp: peer.current.localDescription });
-    log('Offer sent.');
   }
 
-  // RECEIVER
+  // RECEIVER (joiner side)
   async function handleOffer(id: string, sdp: RTCSessionDescriptionInit) {
+    setStatus('Connecting…');
     peer.current = createPeer(id);
 
     peer.current.ondatachannel = (e) => {
@@ -171,76 +142,60 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
         dataChannel.current = e.channel;
       }
       e.channel.onmessage = onMessage;
-      e.channel.onopen = () => log(`DataChannel opened (${e.channel.label})`);
+      e.channel.onopen = () => setStatus('Connected');
     };
 
     await peer.current.setRemoteDescription(sdp);
     flushBufferedCandidates();
+
     const answer = await peer.current.createAnswer();
     await peer.current.setLocalDescription(answer);
 
-    // Wait until ICE gathering completes before sending answer
-    await new Promise((resolve) => {
-      if (peer.current?.iceGatheringState === 'complete') {
-        resolve(null);
-      } else {
-        const checkState = () => {
-          if (peer.current?.iceGatheringState === 'complete') {
-            peer.current.removeEventListener('icegatheringstatechange', checkState);
-            resolve(null);
-          }
-        };
-        peer.current?.addEventListener('icegatheringstatechange', checkState);
-      }
-    });
-
+    // Send answer immediately (trickle ICE) — waiting for ICE gathering here
+    // causes a ~1 min delay because the host doesn't wait either.
     socket?.emit('answer', flightCode, { sdp: answer });
-    log('Answer sent.');
   }
 
-  // SENDER
+  // SENDER — handle answer from joiner
   async function handleAnswer(sdp: RTCSessionDescriptionInit, remoteId: string) {
-    if (peer.current) {
-      peer.current.onicecandidate = (e) => {
-        if (e.candidate && socket?.id) {
-          socket?.emit('ice-candidate', { id: remoteId, candidate: e.candidate });
-        }
-      };
+    if (!peer.current) return;
 
-      try {
-        await peer.current.setRemoteDescription(sdp);
-
-        flushBufferedCandidates();
-
-        for (const candidate of queuedOwnerCandidates.current) {
-          socket?.emit('ice-candidate', { id: remoteId, candidate });
-        }
-        queuedOwnerCandidates.current = [];
-
-        log('Remote description set.');
-      } catch (e) {
-        console.error('Failed to set remote description', e);
-        log('Failed to set remote description');
+    // Now we know the remote socket id — update ICE candidate handler to send directly.
+    peer.current.onicecandidate = (e) => {
+      if (e.candidate && socket?.id) {
+        socket?.emit('ice-candidate', { id: remoteId, candidate: e.candidate });
       }
+    };
+
+    try {
+      await peer.current.setRemoteDescription(sdp);
+      flushBufferedCandidates();
+
+      // Flush buffered outgoing candidates to joiner now that we have their id.
+      for (const candidate of queuedOwnerCandidates.current) {
+        socket?.emit('ice-candidate', { id: remoteId, candidate });
+      }
+      queuedOwnerCandidates.current = [];
+    } catch (e) {
+      console.error('Failed to set remote description', e);
+      setStatus('Connection failed — try refreshing');
     }
   }
 
-  // ICE
+  // ICE candidate received from remote peer
   async function handleIce(id: string, candidate: Candidate) {
     try {
       if (peer.current?.remoteDescription) {
         await peer.current.addIceCandidate(new RTCIceCandidate(candidate));
-        log('Added ICE candidate');
       } else {
         queuedCandidates.current.push(candidate);
-        log('Buffered ICE candidate');
       }
     } catch (err) {
       console.error('Failed to add ICE candidate', err);
     }
   }
 
-  // Flush any buffered ice candidates from the *other* peer
+  // Flush any remote ICE candidates that arrived before setRemoteDescription
   const flushBufferedCandidates = async () => {
     for (const c of queuedCandidates.current) {
       try {
@@ -288,7 +243,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
 
     socket.on('offer', async (id, { sdp }) => {
       if (!sdp) {
-        log('Failed : missing payload');
+        setStatus('Connection failed — try refreshing');
         return;
       }
       await handleOffer(id, sdp.sdp);
@@ -308,12 +263,12 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
 
     socket.emit('joinFlight', flightCode, (resp: { success: boolean; message?: string }) => {
       if (resp.success) {
-        log('Joined signaling.');
+        setStatus('Waiting for someone to join…');
       } else {
         if (resp.message === 'Flight is full') {
           router.push('/flightFull');
         } else {
-          log(`Failed to join: ${resp.message}`);
+          setStatus(`Could not join — ${resp.message}`);
         }
       }
     });
@@ -329,6 +284,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
 
       socket.emit('getNearbyUsers');
     });
+
     return () => {
       socket.off('flightUsers');
       socket.off('offer');
@@ -350,7 +306,6 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
     nearByUsers,
     inviteToFlight,
     updateStats,
-    sendFeedback,
     connectToFlight,
     refreshNearby,
     disconnect,

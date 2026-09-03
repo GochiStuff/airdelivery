@@ -9,7 +9,6 @@ import { useWebRTCState, useWebRTCActions } from '@/context/WebRTCContext';
 import { MetricsSection } from '@/components/room/MetricSection';
 import { QueueTray } from '@/components/room/QueueTray';
 import AsktoShareSection from '@/components/room/share';
-import SharePopup from '@/components/AskForShare';
 
 export default function RoomPage() {
   // --- route / flight code ------------------------------------------------
@@ -87,9 +86,6 @@ export default function RoomPage() {
   // -----------------------------------------------------------------------
   return (
     <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-8 px-4 sm:px-6 lg:px-8">
-      {/* Share popup (kept as in original) */}
-      <SharePopup />
-
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-6 sm:p-8 gap-6 mb-6 transition-all border dark:border-zinc-800">
@@ -107,9 +103,9 @@ export default function RoomPage() {
             <div className="flex flex-wrap items-center gap-3 mt-1 text-sm">
               <Badge
                 color={
-                  typeof status === 'string' && status.includes('Connection')
+                  status === 'Connected'
                     ? 'green'
-                    : status.includes('Failed')
+                    : status.includes('failed') || status.includes('Disconnected')
                       ? 'red'
                       : 'yellow'
                 }

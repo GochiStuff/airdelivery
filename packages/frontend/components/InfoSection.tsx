@@ -1,7 +1,6 @@
 'use client';
 import type React from 'react';
 import { useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
 
 const features = [
   'Lightning fast',
@@ -29,56 +28,7 @@ const features = [
 ];
 
 const InfoSection = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [type, setType] = useState('');
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'thanks' | 'error'>('idle');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const url = process.env.NEXT_PUBLIC_SOCKET || 'http://localhost:5500';
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Basic client-side validation
-    if (name.trim().length === 0 || name.length > 100) {
-      alert('Name must be between 1 and 100 characters.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-
-    if (message.trim().length === 0 || message.length > 500) {
-      alert('Message must be between 1 and 500 characters.');
-      return;
-    }
-
-    setStatus('sending');
-
-    try {
-      const res = await fetch(`${url}/api/v1/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, type, message }),
-        credentials: 'include',
-      });
-
-      if (res.ok) {
-        setStatus('thanks');
-      } else if (res.status === 429) {
-        setStatus('error');
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      setStatus('error');
-    }
-  };
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -270,111 +220,6 @@ const InfoSection = () => {
         </div>
       </section>
 
-      {/* Support */}
-
-      {/* Feedback */}
-      <section
-        id="feedback"
-        className="py-12 bg-zinc-900 text-white md:py-32 px-6 sm:px-12 lg:px-24"
-      >
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8 tracking-tight">Get in touch</h2>
-
-          {status === 'thanks' ? (
-            <div className="text-center py-16">
-              <p className="text-2xl animate-pulse flex gap-2 justify-center text-green-600 mb-4">
-                <CheckCircle2 className="w-7 h-7" />
-                Thank you!
-              </p>
-              <p className="text-xl text-neutral-400">
-                We've received your feedback and will get back to you soon.
-              </p>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-8 text-left"
-              aria-describedby="feedback-instructions"
-              noValidate
-            >
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <label htmlFor="fb-name" className="block text-sm text-neutral-400 mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    id="fb-name"
-                    name="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    placeholder="John Doe"
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-none text-white placeholder:text-neutral-500 focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="fb-email" className="block text-sm text-neutral-400 mb-2">
-                    Your Email
-                  </label>
-                  <input
-                    id="fb-email"
-                    name="email"
-                    type="email"
-                    value={email}
-                    required
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    className="w-full p-4 bg-white/5 border border-white/10 rounded-none text-white placeholder:text-neutral-500 focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="fb-type" className="block text-sm text-neutral-400 mb-2">
-                  Type
-                </label>
-                <input
-                  id="fb-type"
-                  name="type"
-                  type="text"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  required
-                  placeholder="Bug / Suggestion / Feedback"
-                  className="w-full p-4 bg-white/5 border border-white/10 rounded-none text-white placeholder:text-neutral-500 focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                />
-              </div>
-              <div>
-                <label htmlFor="fb-message" className="block text-sm text-neutral-400 mb-2">
-                  Your Message
-                </label>
-                <textarea
-                  id="fb-message"
-                  name="message"
-                  rows={6}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                  placeholder="Tell us what you think..."
-                  className="w-full p-4 bg-white/5 border  border-white/10  text-white placeholder:text-neutral-500 focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="px-8 py-4 bg-orange-600 text-white rounded-sm hover:bg-orange-700 text-lg font-medium transition-colors duration-300"
-              >
-                {status === 'sending' ? 'Sending…' : 'Send Feedback'}
-              </button>
-              {status === 'error' && (
-                <p className="text-red-400 mt-4">
-                  Oops! Something went wrong. Please try again later.
-                </p>
-              )}
-            </form>
-          )}
-        </div>
-      </section>
     </main>
   );
 };
