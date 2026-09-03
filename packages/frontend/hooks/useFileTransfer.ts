@@ -88,8 +88,8 @@ export function useFileTransfer(
   // --- Constants / tuning  ( MOST OF THESE WERE SET AFTER BENCHMARKING DIFF SETTINGS ) ---------------------------------------------
   const MAX_RAM_SIZE = 1.2 * 1024 * 1024 * 1024; // 1.2 GB
   const peerMax = (dataChannel as any)?.maxMessageSize || 0;
-  const CHUNK_SIZE = peerMax > 0 ? Math.min(64 * 1024, Math.floor(peerMax * 0.9)) : 64 * 1024;
-  const BUFFER_THRESHOLD = 2 * 1024 * 1024; // 2MB - safe limit for most browsers
+  const CHUNK_SIZE = peerMax > 0 ? Math.min(256 * 1024, Math.floor(peerMax * 0.9)) : 64 * 1024;
+  const BUFFER_THRESHOLD = 8 * 1024 * 1024; // 8MB high-water (Chromium allows 16MB, Safari/Firefox tolerate 8MB)
   const PROGRESS_INTERVAL_MS = 500;
 
   const safeSend = useCallback((channel: RTCDataChannel | null, data: string | ArrayBuffer) => {
