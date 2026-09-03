@@ -32,3 +32,9 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Private planning
+todo.md
+
+# Blog drafts
+/blog/drafts/
