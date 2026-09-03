@@ -8,8 +8,6 @@ import { useInvitationToJoin } from '@/components/invitationToJoin';
 import { useWebRTCState, useWebRTCActions } from '@/context/WebRTCContext';
 import InfoSection from '@/components/InfoSection';
 import TermsModal from '@/components/terms';
-import HistoryDrawer from '@/components/HistoryDrawer';
-import { Clock } from 'lucide-react';
 
 export default function MainPage() {
   const router = useRouter();
@@ -21,8 +19,6 @@ export default function MainPage() {
   // Modal for showing terms
   const [showTerms, setShowTerms] = useState(false);
 
-  // History drawer state
-  const [showHistory, setShowHistory] = useState(false);
 
   // Drag-over visual state for nearby user tiles
   const [dragOverId, setDragOverId] = useState<string | null>(null);
