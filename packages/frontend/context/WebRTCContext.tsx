@@ -49,7 +49,12 @@ export const WebRTCProvider = ({ children }: Props) => {
     fileTransRef.current?.handleMessage(e);
   });
 
-  const fileTrans = useFileTransfer(webRTC.dataChannel, webRTC.disconnect, webRTC.updateStats);
+  const fileTrans = useFileTransfer(
+    webRTC.dataChannel,
+    webRTC.controlChannel,
+    webRTC.disconnect,
+    webRTC.updateStats,
+  );
   fileTransRef.current = fileTrans;
 
   const actions = useMemo(

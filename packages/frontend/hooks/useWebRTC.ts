@@ -30,6 +30,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
   const { socket } = useSocket();
   const peer = useRef<RTCPeerConnection | null>(null);
   const dataChannel = useRef<RTCDataChannel | null>(null);
+  const controlChannel = useRef<RTCDataChannel | null>(null);
   const [status, setStatus] = useState('Connecting...');
   const [members, setMembers] = useState<Member[]>([]);
   const [ownerId, setOwnerId] = useState<string>('');
@@ -120,6 +121,13 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
       dataChannel.current = null;
     }
 
+    if (controlChannel.current) {
+      controlChannel.current.onmessage = null;
+      controlChannel.current.onopen = null;
+      controlChannel.current.close();
+      controlChannel.current = null;
+    }
+
     setFlightCode(null);
     setStatus('Disconnected');
     setOwnerId('');
@@ -134,9 +142,15 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
   async function initiateSender() {
     if (!peer.current) return;
 
+    // Bulk data channel for file chunks, plus a dedicated control channel so
+    // JSON messages (init/pause/cancel) never queue behind chunk floods.
     dataChannel.current = peer.current.createDataChannel('fileTransfer');
     dataChannel.current.onopen = () => log('DataChannel opened.');
     dataChannel.current.onmessage = onMessage;
+
+    controlChannel.current = peer.current.createDataChannel('control', { ordered: true });
+    controlChannel.current.onopen = () => log('Control channel opened.');
+    controlChannel.current.onmessage = onMessage;
 
     const offer = await peer.current.createOffer();
     await peer.current.setLocalDescription(offer);
@@ -151,9 +165,13 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
     peer.current = createPeer(id);
 
     peer.current.ondatachannel = (e) => {
-      dataChannel.current = e.channel;
+      if (e.channel.label === 'control') {
+        controlChannel.current = e.channel;
+      } else {
+        dataChannel.current = e.channel;
+      }
       e.channel.onmessage = onMessage;
-      e.channel.onopen = () => log('DataChannel opened');
+      e.channel.onopen = () => log(`DataChannel opened (${e.channel.label})`);
     };
 
     await peer.current.setRemoteDescription(sdp);
@@ -327,6 +345,7 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
 
   return {
     dataChannel: dataChannel.current,
+    controlChannel: controlChannel.current,
     status,
     nearByUsers,
     inviteToFlight,

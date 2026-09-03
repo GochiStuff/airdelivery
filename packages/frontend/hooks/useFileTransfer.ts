@@ -51,6 +51,7 @@ type Meta = {
 
 export function useFileTransfer(
   dataChannel: RTCDataChannel | null,
+  controlChannel: RTCDataChannel | null,
   disconnect: () => void,
   updateStats: (files: number, transfer: number) => void,
 ) {
@@ -107,6 +108,17 @@ export function useFileTransfer(
       throw err;
     }
   }, []);
+
+  // JSON control messages (init/pause/resume/cancel/done) ride the dedicated
+  // control channel so chunk floods can never head-of-line block them.
+  const controlSend = useCallback(
+    (data: string) => {
+      const target =
+        controlChannel && controlChannel.readyState === 'open' ? controlChannel : dataChannel;
+      safeSend(target, data);
+    },
+    [controlChannel, dataChannel, safeSend],
+  );
 
   // We store partial incoming transfers here to avoid re-rendering on each chunk
   const incoming = useRef<
@@ -334,12 +346,9 @@ export function useFileTransfer(
       const initByteLen = new TextEncoder().encode(initMsg).length;
 
       if (peerMax > 0 && initByteLen > peerMax) {
-        safeSend(
-          dataChannel,
-          JSON.stringify({ type: 'init', transferId, directoryPath, size: total, hash }),
-        );
+        controlSend(JSON.stringify({ type: 'init', transferId, directoryPath, size: total, hash }));
       } else {
-        safeSend(dataChannel, initMsg);
+        controlSend(initMsg);
       }
 
       let offset = 0;
@@ -348,7 +357,7 @@ export function useFileTransfer(
         await new Promise((res) => setTimeout(res, 0));
         if (controls.canceled) {
           try {
-            safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+            controlSend(JSON.stringify({ type: 'cancel', transferId }));
           } catch {}
           setQueue((q) =>
             q.map((x) => (x.transferId === transferId ? { ...x, status: 'canceled' } : x)),
@@ -365,11 +374,11 @@ export function useFileTransfer(
         }
         if (controls.paused) {
           try {
-            safeSend(dataChannel, JSON.stringify({ type: 'pause', transferId }));
+            controlSend(JSON.stringify({ type: 'pause', transferId }));
           } catch {}
           await controls.resumePromise;
           try {
-            safeSend(dataChannel, JSON.stringify({ type: 'resume', transferId }));
+            controlSend(JSON.stringify({ type: 'resume', transferId }));
           } catch {}
         }
 
@@ -436,7 +445,7 @@ export function useFileTransfer(
 
       // Signal completion and update queues/meta
       try {
-        safeSend(dataChannel, JSON.stringify({ type: 'done', transferId }));
+        controlSend(JSON.stringify({ type: 'done', transferId }));
       } catch {}
 
       setQueue((q) =>
@@ -969,7 +978,7 @@ export function useFileTransfer(
       );
       if (dataChannel) {
         try {
-          safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+          controlSend(JSON.stringify({ type: 'cancel', transferId }));
         } catch {}
       }
 
@@ -1018,7 +1027,7 @@ export function useFileTransfer(
       }
       if (dataChannel) {
         try {
-          safeSend(dataChannel, JSON.stringify({ type: 'cancel', transferId }));
+          controlSend(JSON.stringify({ type: 'cancel', transferId }));
         } catch {}
       }
     },
