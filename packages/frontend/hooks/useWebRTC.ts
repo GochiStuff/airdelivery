@@ -62,13 +62,28 @@ export function useWebRTC(onMessage: (e: MessageEvent) => void) {
     });
 
     // Connection state change handling
+    let iceRestarted = false;
     pc.onconnectionstatechange = () => {
       const state = peer.current?.connectionState;
-      if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-        log('Disconnected');
+      if (state === 'disconnected') {
+        // Transient (e.g. Wi-Fi to cellular switch). Give ICE one restart
+        // chance before tearing the whole session down.
+        if (!iceRestarted) {
+          iceRestarted = true;
+          log('Reconnecting...');
+          pc.restartIce();
+          setTimeout(() => {
+            if (peer.current?.connectionState === 'disconnected') disconnect();
+          }, 5000);
+        } else {
+          disconnect();
+        }
+      }
+      if (state === 'failed' || state === 'closed') {
         disconnect();
       }
       if (state === 'connected') {
+        iceRestarted = false;
         log('Connected');
       }
     };
