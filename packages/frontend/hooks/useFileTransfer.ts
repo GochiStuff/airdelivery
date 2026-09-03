@@ -254,21 +254,18 @@ export function useFileTransfer(
   }, []);
 
   const COMPRESSED_EXTS = new Set([
-    'zip',
-    'rar',
-    '7z',
-    'gz',
-    'mp4',
-    'mkv',
-    'mov',
-    'avi',
-    'jpg',
-    'jpeg',
-    'png',
-    'webp',
+    // archives
+    'zip', 'rar', '7z', 'gz', 'tgz', 'bz2', 'xz', 'zst', 'tar', 'iso', 'dmg', 'apk',
+    // video
+    'mp4', 'mkv', 'mov', 'avi', 'webm', 'm4v', 'mpg', 'mpeg', 'wmv', 'flv', 'ts',
+    // images
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'avif', 'tiff',
+    // audio
+    'mp3', 'wav', 'flac', 'ogg', 'opus', 'm4a', 'aac', 'wma',
+    // documents that are zip containers internally
+    'docx', 'xlsx', 'pptx', 'odt', 'ods', 'odp', 'epub',
+    // other already-compressed
     'pdf',
-    'mp3',
-    'wav',
   ]);
 
   function shouldCompress(fileName: string): boolean {
