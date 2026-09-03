@@ -81,14 +81,16 @@ export default function BenchPage() {
   const host = useCallback(() => {
     if (!socket) return;
     cleanup();
-    const room = code || Math.random().toString(36).slice(2, 7).toUpperCase();
-    setCode(room);
-    setRole('host');
 
-    socket.emit('joinFlight', room, (resp: { success: boolean; message?: string }) => {
-      addLog(`host joined ${room}: ${resp.success ? 'ok' : resp.message}`);
+    socket.emit('createFlight', (resp: { code: string }) => {
+      const room = resp.code;
+      setCode(room);
+      setRole('host');
+
+      socket.emit('joinFlight', room, (jresp: { success: boolean; message?: string }) => {
+        addLog(`host joined ${room}: ${jresp.success ? 'ok' : jresp.message}`);
+      });
     });
-
     socket.on('flightUsers', ({ ownerId }: { ownerId: string }) => {
       if (socket.id !== ownerId || pcRef.current) return;
       const pc = makePeer('', true);
