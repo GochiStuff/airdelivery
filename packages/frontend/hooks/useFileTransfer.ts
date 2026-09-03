@@ -11,6 +11,7 @@ import { generateThumbnail } from '@/lib/generateThumbnail';
 import { zipFiles } from '@/utils/compress';
 
 import { addToHistory } from '@/lib/history';
+import { createFileWriter } from '@/lib/fsAccess';
 
 // ----------------------------- Types -----------------------------------
 
@@ -591,7 +592,12 @@ export function useFileTransfer(
           let chunks: Uint8Array[] | undefined = undefined;
           let downloaded = false;
 
-          if (size < MAX_RAM_SIZE) {
+          // Chromium with a chosen save folder: write any size straight to disk
+          const fsWriter = await createFileWriter(directoryPath);
+          if (fsWriter) {
+            writer = fsWriter;
+            downloaded = true;
+          } else if (size < MAX_RAM_SIZE) {
             // Small file: buffer in-memory and produce a blob at the end
             chunks = [];
             writer = {

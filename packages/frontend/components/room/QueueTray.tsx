@@ -1,6 +1,13 @@
-import { Download, File, Pause, Play, X, ArrowDown, ArrowUp } from 'lucide-react';
-import React, { useState, memo } from 'react';
+import { Download, File, FolderOpen, Pause, Play, X, ArrowDown, ArrowUp } from 'lucide-react';
+import React, { useEffect, useState, memo } from 'react';
 import { Switch } from '../ui/switch';
+import {
+  supportsFSAccess,
+  requestSaveDirectory,
+  clearSaveDirectory,
+  hasSaveDirectory,
+  saveDirectoryName,
+} from '@/lib/fsAccess';
 
 interface QueueTrayProp {
   title: string;
@@ -170,6 +177,12 @@ export function QueueTray({
   cancelTransfer,
 }: QueueTrayProp) {
   const [show, setShow] = useState(false);
+  const [fsSupported] = useState(() => supportsFSAccess());
+  const [savedTo, setSavedTo] = useState<string | null>(hasSaveDirectory() ? saveDirectoryName() : null);
+
+  useEffect(() => {
+    setSavedTo(hasSaveDirectory() ? saveDirectoryName() : null);
+  }, [show]);
 
   return (
     <div className="bg-white dark:bg-zinc-900 relative rounded-2xl shadow-sm p-4 border dark:border-zinc-800">
@@ -204,6 +217,25 @@ export function QueueTray({
             <p className="text-sm text-orange-500 mb-2">
               Auto-download is off. Use download buttons below each file.
             </p>
+          )}
+          {fsSupported && (
+            <div className="flex items-center gap-2 mb-4 pb-4 border-b dark:border-zinc-800">
+              <button
+                className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border border-orange-400 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition"
+                onClick={async () => {
+                  if (savedTo) {
+                    clearSaveDirectory();
+                    setSavedTo(null);
+                  } else {
+                    const name = await requestSaveDirectory();
+                    setSavedTo(name);
+                  }
+                }}
+              >
+                <FolderOpen className="w-4 h-4" />
+                {savedTo ? `Saving to: ${savedTo} (tap to unset)` : 'Save to folder'}
+              </button>
+            </div>
           )}
           <ul className="list-disc list-inside text-sm space-y-1 dark:text-zinc-400">
             <li>Use manual download if blocked.</li>
