@@ -12,6 +12,7 @@ import { zipFiles } from '@/utils/compress';
 
 import { addToHistory } from '@/lib/history';
 import { createFileWriter } from '@/lib/fsAccess';
+import { sha256Hex } from '@/utils/hash';
 
 // ----------------------------- Types -----------------------------------
 
@@ -120,12 +121,16 @@ export function useFileTransfer(
         writer: WritableStreamDefaultWriter | null;
         directoryPath: string;
         thumbnail?: string;
+        hash?: string;
+        verifyDisk?: (() => Promise<File | null>) | null;
       }
     >
   >({});
 
   // track which transfer is currently being processed by the writer
   const currentReceivingIdRef = useRef<string | null>(null);
+  const lastBlobRef = useRef<Blob | null>(null);
+  const pendingBlobUrlRef = useRef<{ url: string; name: string } | null>(null);
 
   const pq = useRef(new PQueue({ concurrency: 1 }));
 
@@ -314,6 +319,7 @@ export function useFileTransfer(
       let sent = 0;
 
       const compress = shouldCompress(file.name);
+      const hash = await sha256Hex(file);
 
       // JSON messages count towards maxMessageSize too.
       // If thumbnail is still too big, we omit it to save the connection.
@@ -323,13 +329,14 @@ export function useFileTransfer(
         directoryPath,
         size: total,
         thumbnail,
+        hash,
       });
       const initByteLen = new TextEncoder().encode(initMsg).length;
 
       if (peerMax > 0 && initByteLen > peerMax) {
         safeSend(
           dataChannel,
-          JSON.stringify({ type: 'init', transferId, directoryPath, size: total }),
+          JSON.stringify({ type: 'init', transferId, directoryPath, size: total, hash }),
         );
       } else {
         safeSend(dataChannel, initMsg);
@@ -547,18 +554,42 @@ export function useFileTransfer(
         currentReceivingIdRef.current = null;
         delete incoming.current[transferId];
 
+        // Integrity check: compare SHA-256 against the sender's digest
+        let integrityFailed = false;
+        if (rec.hash) {
+          let actual: string | undefined;
+          if (rec.verifyDisk) {
+            const saved = await rec.verifyDisk();
+            if (saved) actual = await sha256Hex(saved);
+          } else if (lastBlobRef.current) {
+            actual = await sha256Hex(lastBlobRef.current);
+          }
+          integrityFailed = actual !== undefined && actual !== rec.hash;
+          if (integrityFailed) console.error('Integrity check failed for', rec.directoryPath);
+        }
+        lastBlobRef.current = null;
+        rec.verifyDisk = null;
+
         setRecvQueue((rq) =>
           rq.map((r) =>
-            r.transferId === transferId ? { ...r, status: 'done', progress: 100 } : r,
+            r.transferId === transferId
+              ? { ...r, status: integrityFailed ? 'error' : 'done', progress: 100 }
+              : r,
           ),
         );
+
+        // Auto-download only after the integrity check has passed
+        if (!integrityFailed && pendingBlobUrlRef.current) {
+          tryAutoDownload(pendingBlobUrlRef.current.url, pendingBlobUrlRef.current.name);
+        }
+        pendingBlobUrlRef.current = null;
 
         addToHistory({
           id: transferId,
           name: rec.directoryPath,
           size: rec.size,
           type: 'receive',
-          status: 'done',
+          status: integrityFailed ? 'error' : 'done',
           thumbnail: rec.thumbnail,
         });
 
@@ -578,7 +609,7 @@ export function useFileTransfer(
         console.warn('Received string but not JSON:', event.data);
         return;
       }
-      const { type, transferId, directoryPath, size, thumbnail } = msg;
+      const { type, transferId, directoryPath, size, thumbnail, hash } = msg;
 
       if (type === 'chunk') {
         currentReceivingIdRef.current = transferId;
@@ -591,11 +622,13 @@ export function useFileTransfer(
           let writer: WritableStreamDefaultWriter;
           let chunks: Uint8Array[] | undefined = undefined;
           let downloaded = false;
+          let verifyDisk: (() => Promise<File | null>) | null = null;
 
           // Chromium with a chosen save folder: write any size straight to disk
-          const fsWriter = await createFileWriter(directoryPath);
-          if (fsWriter) {
-            writer = fsWriter;
+          const fsTarget = await createFileWriter(directoryPath);
+          if (fsTarget) {
+            writer = fsTarget.writer;
+            verifyDisk = fsTarget.verify;
             downloaded = true;
           } else if (size < MAX_RAM_SIZE) {
             // Small file: buffer in-memory and produce a blob at the end
@@ -615,12 +648,13 @@ export function useFileTransfer(
                 }
 
                 const blob = new Blob([all]);
+                lastBlobRef.current = blob;
                 const url = URL.createObjectURL(blob);
                 setRecvQueue((rq) =>
                   rq.map((r) => (r.transferId === transferId ? { ...r, blobUrl: url } : r)),
                 );
 
-                tryAutoDownload(url, directoryPath);
+                pendingBlobUrlRef.current = { url, name: directoryPath };
 
                 if (chunks?.length) chunks.length = 0;
 
@@ -662,6 +696,8 @@ export function useFileTransfer(
             lastProgressUpdate: 0,
             directoryPath,
             thumbnail,
+            hash,
+            verifyDisk,
           };
 
           setRecvQueue((rq) => [

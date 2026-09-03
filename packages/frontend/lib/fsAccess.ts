@@ -37,7 +37,7 @@ export function clearSaveDirectory() {
 
 export async function createFileWriter(
   directoryPath: string,
-): Promise<WritableStreamDefaultWriter | null> {
+): Promise<{ writer: WritableStreamDefaultWriter; verify: () => Promise<File | null> } | null> {
   if (!saveDirectory) return null;
 
   try {
@@ -51,7 +51,16 @@ export async function createFileWriter(
 
     const fileHandle = await dir.getFileHandle(fileName, { create: true });
     const writable = await fileHandle.createWritable();
-    return writable.getWriter();
+    return {
+      writer: writable.getWriter(),
+      verify: async () => {
+        try {
+          return await fileHandle.getFile();
+        } catch {
+          return null;
+        }
+      },
+    };
   } catch {
     return null;
   }
