@@ -25,6 +25,7 @@ export default function BenchPage() {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const queued = useRef<RTCIceCandidateInit[]>([]);
+  const roomRef = useRef<string>('');
   const remoteIdRef = useRef<string>('');
 
   const addLog = (m: string) => setLog((l) => [...l.slice(-30), m]);
@@ -88,13 +89,17 @@ export default function BenchPage() {
       setRole('host');
 
       socket.emit('joinFlight', room, (jresp: { success: boolean; message?: string }) => {
+        roomRef.current = room;
         addLog(`host joined ${room}: ${jresp.success ? 'ok' : jresp.message}`);
       });
     });
-    socket.on('flightUsers', ({ ownerId }: { ownerId: string }) => {
+    socket.on('flightUsers', async ({ ownerId }: { ownerId: string }) => {
       if (socket.id !== ownerId || pcRef.current) return;
       const pc = makePeer('', true);
       pcRef.current = pc;
+      pc.onicecandidate = (e) => {
+        if (e.candidate) queued.current.push(e.candidate);
+      };
 
       const dc = pc.createDataChannel('bench');
       dc.binaryType = 'arraybuffer';
@@ -111,6 +116,11 @@ export default function BenchPage() {
         queued.current = [];
         addLog('answer applied');
       });
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', roomRef.current, { sdp: pc.localDescription });
+      addLog('offer sent');
     });
 
     socket.on(
