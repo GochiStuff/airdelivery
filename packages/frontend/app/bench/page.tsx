@@ -148,6 +148,14 @@ export default function BenchPage() {
     });
 
     socket.on('offer', async (id: string, { sdp }: { sdp: RTCSessionDescriptionInit }) => {
+      if (!sdp) {
+        // The host has not sent its offer yet (server stores/relays it at
+        // join time). Re-join briefly later until the offer exists.
+        addLog('no offer yet, retrying...');
+        setTimeout(() => socket.emit('joinFlight', code, () => {}), 1500);
+        return;
+      }
+      if (pcRef.current) return;
       remoteIdRef.current = id;
       const pc = makePeer(id, false);
       pcRef.current = pc;
