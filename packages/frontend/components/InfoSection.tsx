@@ -58,16 +58,12 @@ const InfoSection = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
             <div>
-              <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-4">TBs+</p>
-              <p className="text-xl text-neutral-700 dark:text-neutral-300">Data Shared</p>
-            </div>
-            <div>
               <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-">20K+</p>
               <p className="text-xl text-neutral-700 dark:text-neutral-300">Users in First Month</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-">27K+</p>
-              <p className="text-xl text-neutral-700 dark:text-neutral-300">Share Sessions</p>
+              <p className="text-5xl font-bold text-orange-500 mb-2 md:mb-">300K+</p>
+              <p className="text-xl text-neutral-700 dark:text-neutral-300">Visitors till date</p>
             </div>
           </div>
         </div>
